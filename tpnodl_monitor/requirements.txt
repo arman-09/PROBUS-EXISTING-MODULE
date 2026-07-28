@@ -1,0 +1,9 @@
+flask>=3.0
+flask-cors>=4.0
+requests>=2.31
+schedule>=1.2
+pandas>=2.0
+openpyxl>=3.1
+twilio>=9.0
+numpy>=1.26
+scipy>=1.12
