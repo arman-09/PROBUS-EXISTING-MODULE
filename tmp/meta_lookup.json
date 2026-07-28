@@ -1,0 +1,966 @@
+{
+  "fetched_at": "2026-06-07T11:00:00",
+  "fetched_at_epoch": 1780807227.215425,
+  "count": 137,
+  "lookup": {
+    "NES82825": {
+      "Circle": "BARIPADA",
+      "Division": "UED, Udala",
+      "Gss": "132/33 KV UDALA (UED, Udala)",
+      "Feeder": "33 KV KAPTIPADA",
+      "FeederType": "Non-Priority"
+    },
+    "NES82730": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "132/33 KV UDALA",
+      "Feeder": "33 KV BERHAMPUR",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61587": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "132/33 KV CHANDIPUR",
+      "Feeder": "33KV SARAGAON FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61742": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "220/132/33 KV JODA",
+      "Feeder": "33 KV JURUDI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60926": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN64953": {
+      "Circle": "BALASORE",
+      "Division": "SED, Soro",
+      "Gss": "132/33 KV SORO",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61085": {
+      "Circle": "BHADRAK",
+      "Division": "BSED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BSED, Bhadrak)",
+      "Feeder": "33 KV DHAMNAGAR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61550": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BALIMUNDA",
+      "Feeder": "33KV COAST CANEL FEEDER",
+      "FeederType": "-"
+    },
+    "TPN60533": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV RAIRANGPUR",
+      "Feeder": "33 KV BISOI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61659": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33KV TURUMUNGA",
+      "Feeder": "33 KV KHIRETANGIRI FDR",
+      "FeederType": "-"
+    },
+    "TPN60599": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV RAIRANGPUR",
+      "Feeder": "33 KV GORUMAHISANI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60643": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV RAIRANGPUR",
+      "Feeder": "33 KV BAHALDA FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60492": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV BARBIL",
+      "Feeder": "33 KV BHADRASAHI FDR.",
+      "FeederType": "Priority"
+    },
+    "NES51019": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV ANANDPUR",
+      "Feeder": "33 KV ANANDPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61143": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (BED, Balasore)",
+      "Feeder": "33KV BALASORE NO. 1 FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61451": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33 KV JAJPUR TOWN FDR.",
+      "FeederType": "Priority"
+    },
+    "NES83248": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 KV BETNOTI",
+      "Feeder": "33 KV BETNOTI - II FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61245": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "132/33 KV CHANDIPUR",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61122": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV EMAMI / MITRAPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83265": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV DHENKIKOTE / TIKIRA",
+      "Feeder": "33 KV GHATAGAON FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61430": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV POLASPONGA",
+      "Feeder": "33 KV REMULI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83261": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV BHOGRAI",
+      "Feeder": "33 KV BHOGRAI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61212": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV NILAGIRI FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61211": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV BALGOPALPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61248": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (BED, Balasore)",
+      "Feeder": "33KV BALASORE -2 FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61503": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV POLASPONGA",
+      "Feeder": "33 KV KEONJHAR -II FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61179": {
+      "Circle": "BALASORE",
+      "Division": "BTED, Basta",
+      "Gss": "132/33 KV BASTA",
+      "Feeder": "33 KV BALIAPAL FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61803": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV SOLAR PLANT FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61176": {
+      "Circle": "BALASORE",
+      "Division": "BTED, Basta",
+      "Gss": "132/33 KV BASTA",
+      "Feeder": "33 KV JAMASULI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60304": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "132/33 KV SOMNATHPUR",
+      "Feeder": "33 KV NEW NILGIRI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61804": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV BARIPADA FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61519": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "132/33 KV SOMNATHPUR",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61214": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (BED, Balasore)",
+      "Feeder": "33KV CHANDIPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60494": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV BARBIL",
+      "Feeder": "33 KV BARBIL-II FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN64948": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BNED, Bhadrak)",
+      "Feeder": "33 KV BHADRAK FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN64949": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BNED, Bhadrak)",
+      "Feeder": "33 KV GOPINATHAPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61600": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "132/33 KV SOMNATHPUR",
+      "Feeder": "33 KV NOCCI FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60093": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33 KV GOLABANDHA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61658": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33KV TURUMUNGA",
+      "Feeder": "33KV KENDEIPOSI",
+      "FeederType": "-"
+    },
+    "TPN64950": {
+      "Circle": "BHADRAK",
+      "Division": "BSED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BSED, Bhadrak)",
+      "Feeder": "33 KV ASURALI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN64946": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BNED, Bhadrak)",
+      "Feeder": "33 KV NANDAPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61064": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BNED, Bhadrak)",
+      "Feeder": "33 KV ORALI FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN64934": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "132/33 KV SOMNATHPUR",
+      "Feeder": "33 KV HIL FDR.[HT CONSUMER]",
+      "FeederType": "Non-Priority"
+    },
+    "TPN64954": {
+      "Circle": "BHADRAK",
+      "Division": "BSED, Bhadrak",
+      "Gss": "220/132/33 KV BHADRAK (BSED, Bhadrak)",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES51023": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV ANANDPUR",
+      "Feeder": "33 KV RAMACHANDRAPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60814": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BALIMUNDA",
+      "Feeder": "33 KV BIDEIPUR FEEDER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61117": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV JALESWAR",
+      "Feeder": "33 KV BARTANA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60851": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "220/132/33 KV JODA",
+      "Feeder": "33KV BARBIL-I FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61246": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "132/33 KV CHANDIPUR",
+      "Feeder": "33 KV  SWADHINPADIA FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60110": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV AGARPADA",
+      "Feeder": "33 KV BIDYADHARPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES51012": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV ANANDPUR",
+      "Feeder": "33 KV GHASIPURA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61453": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33 KV BARI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83241": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV BHOGRAI",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES83252": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV BHOGRAI",
+      "Feeder": "33KV KAMARDA NEW FEEDER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61800": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33KV STADIUM FEEDER",
+      "FeederType": "Non-Priority"
+    },
+    "NES83256": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/33 KV KEONJHAR RANKI GIS",
+      "Feeder": "33 KV KEONJHAR 3 (NARANPUR)",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61786": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV BETNOTI- I FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES82818": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV JALESWAR",
+      "Feeder": "33 KV HATIGARH FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61749": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV MEDICAL FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61789": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES82817": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV JALESWAR",
+      "Feeder": "33 KV JALESWAR FDR.",
+      "FeederType": "Priority"
+    },
+    "NES83208": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV RAGHUNATHPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61568": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "132/33 KV CHANDABALI",
+      "Feeder": "33 KV DHAMARA EXPRESS FDR.",
+      "FeederType": "-"
+    },
+    "TPN61655": {
+      "Circle": "BALASORE",
+      "Division": "BTED, Basta",
+      "Gss": "132/33 KV BASTA",
+      "Feeder": "33 KV RAJGHAT FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60267": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "220/132/33 KV OLD DUBURI",
+      "Feeder": "33 KV SUKINDA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61450": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33 KV BINJHARPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61493": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33KV MEDICAL COLLAGE FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60493": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV BARBIL",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61061": {
+      "Circle": "BALASORE",
+      "Division": "SED, Soro",
+      "Gss": "132/33 KV SORO",
+      "Feeder": "33 KV KHAIRA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61609": {
+      "Circle": "BALASORE",
+      "Division": "BTED, Basta",
+      "Gss": "132/33 KV BASTA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "-"
+    },
+    "TPN60013": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "220/132/33 KV OLD DUBURI",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES83213": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "220/132/33 KV JODA",
+      "Feeder": "33 KV BILEIPADA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61657": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33KV TURUMUNGA",
+      "Feeder": "33KV TURUMUNGA FDR",
+      "FeederType": "-"
+    },
+    "TPN60668": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BALIMUNDA",
+      "Feeder": "33 KV DHAMARA FEEDER",
+      "FeederType": "Priority"
+    },
+    "TPN60091": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33 KV GOLABANDHA",
+      "Feeder": "JAGMOHANPUR FDR",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61063": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "132/33 KV SORO (BNED, Bhadrak)",
+      "Feeder": "33 KV BASUDEVPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83217": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "132/33 KV JAJPUR ROAD",
+      "Feeder": "33 KV SALAKANA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60669": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "220/132/33 KV BALIMUNDA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61062": {
+      "Circle": "BALASORE",
+      "Division": "SED, Soro",
+      "Gss": "132/33 KV SORO",
+      "Feeder": "33 KV BAHANAGA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61787": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV CHANCHA(INDUSTRIAL) FDR.",
+      "FeederType": "Priority"
+    },
+    "NES83197": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV ANANDPUR",
+      "Feeder": "33 KV CHHENAPADI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83204": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/33 KV KEONJHAR RANKI GIS",
+      "Feeder": "33KV KEONJHAR-I FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60009": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "132/33 KV JAJPUR ROAD",
+      "Feeder": "33 KV KUAKHIA FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61501": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV POLASPONGA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES83202": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 KV BETNOTI",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61121": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (BED, Balasore)",
+      "Feeder": "33KV CITY FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN61210": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV SRIJANG FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61142": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV ODANGI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES82775": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 KV BETNOTI",
+      "Feeder": "33 KV BADSHAI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61040": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV RUPSA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61710": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33KV TURUMUNGA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "-"
+    },
+    "TPN61707": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "132/33 KV CHANDABALI",
+      "Feeder": "33 KV CHANDABALI FDR",
+      "FeederType": "Priority"
+    },
+    "TPN61745": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV SAMAKHUNTA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61224": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 KV BANGRIPOSI",
+      "Feeder": "33 KV BANGRIPOSI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NSC95199": {
+      "Circle": "BALASORE",
+      "Division": "JED, Jaleswar",
+      "Gss": "132/33 KV JALESWAR",
+      "Feeder": "33 KV KAMARDA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61405": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 KV BANGRIPOSI",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES51018": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV ANANDPUR",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN64952": {
+      "Circle": "BALASORE",
+      "Division": "SED, Soro",
+      "Gss": "132/33 KV SORO",
+      "Feeder": "33 KV SORO FDR.",
+      "FeederType": "Priority"
+    },
+    "NES83253": {
+      "Circle": "BHADRAK",
+      "Division": "BNED, Bhadrak",
+      "Gss": "132/33 KV CHANDABALI",
+      "Feeder": "33 KV JASHIPUR (CHANDABALI ) FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61773": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 BARIPADA",
+      "Feeder": "33 KV BANGRIPOSI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61444": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33 KV ADHANGA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60639": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV RAIRANGPUR",
+      "Feeder": "33 KV KUSUMI FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60284": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV DHENKIKOTE / TIKIRA",
+      "Feeder": "33 KV PATANA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60334": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "220/132/33 KV JODA",
+      "Feeder": "33 KV JODA FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60335": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "220/132/33 KV JODA",
+      "Feeder": "33KV BUS COUPLER(TRF-2&4)",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60269": {
+      "Circle": "JAJPUR",
+      "Division": "KUED, Kuakhia",
+      "Gss": "132/33 KV CHANDIKHOLE",
+      "Feeder": "33 KV JARAKA",
+      "FeederType": "Non-Priority"
+    },
+    "NES83221": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/33 KV KEONJHAR RANKI GIS",
+      "Feeder": "33 KV JUDIA",
+      "FeederType": "Priority"
+    },
+    "TPN61502": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV POLASPONGA",
+      "Feeder": "33 KV KEONJHAR EXPRESS FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61440": {
+      "Circle": "JAJPUR",
+      "Division": "JTED, Jajpur Town",
+      "Gss": "132/33 KV JAJPUR TOWN",
+      "Feeder": "33 KV SIDDHESWAR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES82800": {
+      "Circle": "BARIPADA",
+      "Division": "BPED, Baripada",
+      "Gss": "132/33 KV BETNOTI",
+      "Feeder": "33 KV BETNOTI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61635": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "220/132/33 KV JODA",
+      "Feeder": "33KV BUS COUPLER(TRF-5&6)",
+      "FeederType": "Non-Priority"
+    },
+    "NES83212": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV AGARPADA",
+      "Feeder": "33 KV CHHAYAL SINGH FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60491": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV BARBIL",
+      "Feeder": "33 KV BARBIL -I FDR.",
+      "FeederType": "Priority"
+    },
+    "NES83235": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV KARANJIA",
+      "Feeder": "33 KV JASHIPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "TPN60826": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV KARANJIA",
+      "Feeder": "33 KV SUKURULI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83234": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV KARANJIA",
+      "Feeder": "33 KV KARANJIA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61802": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV KARANJIA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60012": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "132/33 KV JAJPUR ROAD",
+      "Feeder": "33 KV JAJPUR ROAD FDR.",
+      "FeederType": "Priority"
+    },
+    "NES82812": {
+      "Circle": "BARIPADA",
+      "Division": "UED, Udala",
+      "Gss": "132/33 KV UDALA (UED, Udala)",
+      "Feeder": "33 KV KHUNTA",
+      "FeederType": "Priority"
+    },
+    "TPN60266": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "220/132/33 KV OLD DUBURI",
+      "Feeder": "33 KV DAITRARY FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61060": {
+      "Circle": "BALASORE",
+      "Division": "SED, Soro",
+      "Gss": "132/33 KV SORO",
+      "Feeder": "33 KV GOPINATHPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60305": {
+      "Circle": "BALASORE",
+      "Division": "SED, Soro",
+      "Gss": "132/33 KV SORO",
+      "Feeder": "33 KV JAMUJHADI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60642": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV RAIRANGPUR",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60092": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/132/33 KV GOLABANDHA",
+      "Feeder": "TELKOI FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83242": {
+      "Circle": "KEONJHAR",
+      "Division": "KED, Keonjhar",
+      "Gss": "220/33 KV KEONJHAR RANKI GIS",
+      "Feeder": "33 KV MEDICAL FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60638": {
+      "Circle": "BARIPADA",
+      "Division": "RED, Rairangpur",
+      "Gss": "132/33 KV RAIRANGPUR",
+      "Feeder": "33 KV RAIRANGPUR FDR.",
+      "FeederType": "Priority"
+    },
+    "NES82813": {
+      "Circle": "BARIPADA",
+      "Division": "UED, Udala",
+      "Gss": "132/33 KV UDALA (UED, Udala)",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES82729": {
+      "Circle": "BARIPADA",
+      "Division": "UED, Udala",
+      "Gss": "132/33 KV UDALA (UED, Udala)",
+      "Feeder": "33 KV UDALA",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61504": {
+      "Circle": "KEONJHAR",
+      "Division": "JOED, Joda",
+      "Gss": "132/33 KV POLASPONGA",
+      "Feeder": "33 KV JHUMPURA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN60315": {
+      "Circle": "JAJPUR",
+      "Division": "JRED, Jajpur Road",
+      "Gss": "132/33 KV JAJPUR ROAD",
+      "Feeder": "33 KV PANIKOLI FDR.",
+      "FeederType": "Priority"
+    },
+    "NES83206": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV DHENKIKOTE / TIKIRA",
+      "Feeder": "33 KV HARICHANDANPUR FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83255": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV AGARPADA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES83226": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV DHENKIKOTE / TIKIRA",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    },
+    "NES83229": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV DHENKIKOTE / TIKIRA",
+      "Feeder": "33 KV DHENKIKOTE FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "NES83187": {
+      "Circle": "KEONJHAR",
+      "Division": "AED, Anandpur",
+      "Gss": "132/33 KV AGARPADA",
+      "Feeder": "33 KV BISALPATA FDR.",
+      "FeederType": "Non-Priority"
+    },
+    "TPN61123": {
+      "Circle": "BALASORE",
+      "Division": "BED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (BED, Balasore)",
+      "Feeder": "33 KV MEDICAL FEEDER",
+      "FeederType": "Priority"
+    },
+    "TPN61249": {
+      "Circle": "BALASORE",
+      "Division": "CED, Balasore",
+      "Gss": "220/132/33 KV BALASORE (CED, Balasore)",
+      "Feeder": "33KV BUS COUPLER",
+      "FeederType": "Non-Priority"
+    }
+  }
+}
