@@ -1,0 +1,32 @@
+{
+  "sites": [
+    {
+      "site_id": "1004_01",
+      "sheet_name": "",
+      "display_name": "Kalimandir PSS",
+      "location": "Balasore(Kalimandir)",
+      "circle": "Balasore",
+      "weight": 1,
+      "active": true
+    },
+    {
+      "site_id": "1004_02",
+      "sheet_name": "",
+      "display_name": "Lalbazar PSS",
+      "location": "Baripada(Lalbazar)",
+      "circle": "Baripada",
+      "weight": 1,
+      "active": true
+    },
+    {
+      "site_id": "1004_03",
+      "sheet_name": "",
+      "display_name": "Ragadi PSS",
+      "location": "Jajpur(Radadi)",
+      "circle": "Jajpur",
+      "weight": 1,
+      "active": true
+    }
+  ],
+  "updated_at": "2026-06-23T00:30:36.252601"
+}
