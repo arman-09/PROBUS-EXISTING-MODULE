@@ -1,0 +1,3588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPNODL — Realtime Load & Voltage Monitor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1628;
+    --bg3: #141c35;
+    --panel: #111827;
+    --panel2: #1a2340;
+    --border: #1e2d4a;
+    --border2: #2a3f6a;
+    --accent: #00c4ff;
+    --accent2: #0085b5;
+    --green: #00e676;
+    --green2: #00a152;
+    --yellow: #ffd740;
+    --yellow2: #b29700;
+    --red: #ff3d71;
+    --red2: #b00020;
+    --orange: #ff9100;
+    --text: #e8eaf6;
+    --text2: #8899bb;
+    --text3: #4a5a7a;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── TOP BAR ─── */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-head);
+    font-size: 20px; font-weight: 700; letter-spacing: 1px;
+    color: var(--accent);
+  }
+  .topbar-logo span { color: var(--text2); font-size: 13px; font-weight: 400; margin-left: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .clock { font-family: var(--font-mono); font-size: 13px; color: var(--text2); }
+  .scrape-btn {
+    background: var(--accent2); color: #fff;
+    border: none; border-radius: 5px;
+    padding: 6px 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s;
+  }
+  .scrape-btn:hover { background: var(--accent); }
+  .scrape-btn.loading { background: #333; cursor: not-allowed; }
+  .spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── NAV TABS ─── */
+  .navtabs {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 0;
+    padding: 0 20px;
+  }
+  .navtab {
+    padding: 10px 18px; font-size: 12px; font-weight: 600;
+    color: var(--text2); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    font-family: var(--font-head); letter-spacing: 0.5px; font-size: 14px;
+  }
+  .navtab:hover { color: var(--text); }
+  .navtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ─── MAIN ─── */
+  .main { padding: 16px 20px; width: 100%; box-sizing: border-box; }
+
+  /* ─── SUMMARY CARDS ─── */
+  .summary-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .demand-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; min-width: 0;
+  }
+  /* GSS Cards */
+  .gss-card {
+    background: var(--panel); border: 2px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .gss-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .gss-card.selected { border-color: var(--accent); background: rgba(0,196,255,0.06); }
+  .gss-card.alert-ov { border-color: var(--red); }
+  .gss-card.alert-uv { border-color: var(--yellow); }
+  .gss-card.has-alerts { border-color: var(--orange); }
+  .demand-card-title { font-family:var(--font-head); font-size:13px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+  .demand-metric { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
+  .demand-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; }
+  .demand-val { font-family:var(--font-mono); font-size:14px; font-weight:600; color:var(--text); }
+  .demand-prev { font-size:10px; color:var(--text3); margin-top:2px; }
+  .demand-delta-up { color:var(--red); } .demand-delta-dn { color:var(--green); }
+  .scard {
+    flex: 1; min-width: 140px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px;
+    transition: border-color 0.3s;
+  }
+  .scard.alert-red   { border-color: var(--red);    background: rgba(255,61,113,0.06); }
+  .scard.alert-yellow{ border-color: var(--yellow); background: rgba(255,215,64,0.06); }
+  .scard.alert-orange{ border-color: var(--orange); background: rgba(255,145,0,0.06); }
+  @keyframes cardFlash {
+    0%   { opacity:0.4; transform:scale(0.98); }
+    100% { opacity:1;   transform:scale(1); }
+  }
+  .scard.flash { animation: cardFlash 0.4s ease-out; }
+  .scard-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 4px; }
+  .scard-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; }
+  .scard-value.green  { color: var(--green); }
+  .scard-value.yellow { color: var(--yellow); }
+  .scard-value.red    { color: var(--red); }
+  .scard-value.orange { color: var(--orange); }
+  .scard-value.accent { color: var(--accent); }
+  .scard-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* ─── FILTERS ─── */
+  .filter-row {
+    display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .filter-row select, .filter-row input {
+    background: var(--panel2); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 5px; padding: 6px 10px; font-size: 12px;
+    outline: none; font-family: var(--font-body);
+  }
+  .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
+  .filter-label { font-size: 11px; color: var(--text3); margin-right: -6px; }
+  .badge {
+    display: inline-flex; align-items: center;
+    background: var(--panel2); border: 1px solid var(--border2);
+    border-radius: 4px; padding: 4px 10px; font-size: 11px; color: var(--text2);
+    cursor: pointer; gap: 5px; transition: border-color 0.15s;
+  }
+  .badge:hover { border-color: var(--accent); color: var(--accent); }
+  .badge.active { border-color: var(--accent); color: var(--accent); background: rgba(0,196,255,0.08); }
+
+  /* ─── TABLE ─── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th {
+    background: var(--bg3); padding: 10px 12px; text-align: left;
+    font-family: var(--font-head); font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+    color: var(--text2); border-bottom: 1px solid var(--border2);
+    cursor: pointer; white-space: nowrap; user-select: none;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th.sort-asc::after { content: ' ▲'; color: var(--accent); font-size: 10px; }
+  thead th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: 10px; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--panel2); }
+  tbody td { padding: 8px 12px; color: var(--text); white-space: nowrap; }
+  .td-mono { font-family: var(--font-mono); font-size: 11px; }
+  .status-ok { color: var(--green); font-weight: 600; }
+  .status-ov { color: var(--red); font-weight: 600; }
+  .status-uv { color: var(--yellow); font-weight: 600; }
+  .status-ol { color: var(--red); font-weight: 600; }
+  .status-nc { color: var(--text3); font-style: italic; }
+  .pill {
+    display: inline-block; border-radius: 3px; padding: 2px 7px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  }
+  .pill-P { background: rgba(0,230,118,0.15); color: var(--green); }
+  .pill-NP { background: rgba(255,145,0,0.1); color: var(--orange); }
+  .pill-ov { background: rgba(255,61,113,0.15); color: var(--red); }
+  .pill-uv { background: rgba(255,215,64,0.15); color: var(--yellow); }
+  .pill-ok  { background: rgba(0,230,118,0.1);  color: var(--green); }
+  .pill-ol  { background: rgba(255,61,113,0.2);  color: var(--red); }
+  .pill-nc  { background: rgba(100,120,160,0.1); color: var(--text3); }
+  .pill-off { background: rgba(80,80,80,0.3);    color: #aaa; }
+  .pill-div { background: rgba(248,131,172,0.2); color: #f783ac; font-weight:700; }
+  .pct-bar { display: inline-block; width: 50px; height: 6px; background: var(--border); border-radius: 3px; vertical-align: middle; position: relative; overflow: hidden; }
+  .pct-fill { height: 100%; border-radius: 3px; }
+
+  /* ─── TAB CONTENT ─── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ─── ALERT LOG ─── */
+  .alert-item {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .alert-icon { font-size: 18px; margin-top: 1px; }
+  .alert-body { flex: 1; }
+  .alert-title { font-weight: 600; margin-bottom: 2px; }
+  .alert-title.ov { color: var(--red); }
+  .alert-title.uv { color: var(--yellow); }
+  .alert-title.ol { color: var(--orange); }
+  .alert-meta { font-size: 11px; color: var(--text2); }
+  .alert-time { font-family: var(--font-mono); font-size: 10px; color: var(--text3); white-space: nowrap; }
+  .alert-acked { opacity: 0.4; }
+
+  /* ─── SETTINGS PANEL ─── */
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .settings-section {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .settings-section h3 {
+    font-family: var(--font-head); font-size: 15px; font-weight: 600;
+    color: var(--accent); margin-bottom: 14px; letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  }
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 5px; padding: 7px 10px;
+    font-size: 12px; font-family: var(--font-body); outline: none;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+  .form-row textarea { resize: vertical; min-height: 70px; }
+  .form-inline { display: flex; gap: 8px; align-items: center; }
+  .btn {
+    background: var(--accent2); color: #fff; border: none;
+    border-radius: 5px; padding: 7px 16px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: var(--font-body); transition: background 0.15s;
+  }
+  .btn:hover { background: var(--accent); }
+  .btn.danger { background: var(--red2); }
+  .btn.danger:hover { background: var(--red); }
+  .btn.sm { padding: 4px 10px; font-size: 11px; }
+  .btn.ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── FEEDER MASTER ─── */
+  .master-toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+  .master-toolbar .search-box {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 5px; padding: 7px 12px; font-size: 12px; outline: none;
+  }
+  .master-toolbar .search-box:focus { border-color: var(--accent); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 24px; width: 500px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  }
+  .modal h2 { font-family: var(--font-head); font-size: 18px; color: var(--accent); margin-bottom: 18px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+
+  /* ─── WHATSAPP NOTIFICATION NOTES ─── */
+  .info-box {
+    background: rgba(0,196,255,0.05); border: 1px solid rgba(0,196,255,0.2);
+    border-radius: 6px; padding: 12px 16px; margin-bottom: 12px;
+    font-size: 11px; color: var(--text2); line-height: 1.7;
+  }
+  .info-box strong { color: var(--accent); }
+
+  /* ─── LOGIN CONFIG ─── */
+  .cred-row { display: flex; gap: 8px; }
+  .cred-row .form-row { flex: 1; }
+
+  /* ─── EMPTY ─── */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* ─── NOTIFICATION TOAST ─── */
+  #toast-area { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--panel2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 10px 16px; font-size: 12px;
+    display: flex; align-items: center; gap: 10px; min-width: 280px;
+    animation: slideIn 0.2s ease;
+  }
+  .toast.success { border-color: var(--green2); }
+  .toast.error { border-color: var(--red2); }
+  .toast.warn { border-color: var(--yellow2); }
+  @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .pagination { display: flex; gap: 6px; align-items: center; margin-top: 12px; }
+  .page-btn { background: var(--panel); border: 1px solid var(--border2); color: var(--text2); border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .page-btn.active { border-color: var(--accent); color: var(--accent); }
+  .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .page-info { font-size: 11px; color: var(--text3); }
+
+  .section-full { grid-column: 1 / -1; }
+  .contact-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .contact-table th { background: var(--bg3); padding: 8px 10px; text-align: left; color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .contact-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  .contact-table tr:last-child td { border: none; }
+  .et-check {
+    display:flex; align-items:center; gap:8px;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:5px; padding:7px 10px; cursor:pointer;
+    transition:border-color 0.15s;
+  }
+  .et-check:hover { border-color: var(--accent); }
+  .et-check input[type=checkbox] { width:15px;height:15px;cursor:pointer;accent-color:var(--accent); }
+  .et-check-label { font-size:12px; font-weight:500; }
+  .et-check-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+  .dot-green { background: var(--green); }
+  .dot-red { background: var(--red); }
+  .live-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); border-radius: 4px; padding: 2px 8px; font-size: 10px; color: var(--green); font-weight: 600; }
+  .live-badge .blink { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+  @keyframes bcPendingBlink {
+    0%,100% { box-shadow: 0 0 0 2px var(--orange); opacity: 1; }
+    50%      { box-shadow: 0 0 8px 3px #f7834a; opacity: 0.75; }
+  }
+  .bc-pending-blink { animation: bcPendingBlink 1.0s ease-in-out infinite !important; }
+  .stale-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,61,113,0.1); border: 1px solid rgba(255,61,113,0.3); border-radius: 4px; padding: 2px 8px; font-size: 10px; color: var(--red); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#00c4ff" stroke-width="1.5" fill="rgba(0,196,255,0.1)"/><path d="M12 6v6l4 2" stroke="#00c4ff" stroke-width="1.5" stroke-linecap="round"/></svg>
+    TPNODL <span>Realtime Load & Voltage Monitor</span>
+  </div>
+  <div class="topbar-right">
+    <div id="last-fetch" style="font-size:11px;color:var(--text3)">Last fetch: —</div>
+    <div class="clock" id="clock">—</div>
+    <button class="scrape-btn" id="fetchBtn" onclick="fetchData()">
+      <span id="fetchIcon">⟳</span> Fetch Now
+    </button>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div class="navtabs">
+  <div class="navtab active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+  <div class="navtab" onclick="switchTab('gss-view')">🏭 GSS View</div>
+  <div class="navtab" onclick="switchTab('alerts')">🚨 Alert Log <span id="alert-count-badge" style="background:var(--red);color:#fff;border-radius:3px;padding:1px 6px;font-size:10px;margin-left:4px;display:none">0</span></div>
+  <div class="navtab" onclick="switchTab('load-events')">📈 Load Events <span id="load-event-badge" style="background:var(--orange);color:#fff;border-radius:3px;padding:1px 6px;font-size:10px;margin-left:4px;display:none">0</span></div>
+  <div class="navtab" onclick="switchTab('feeder-master')">⚙️ Feeder Master</div>
+  <div class="navtab" onclick="switchTab('settings')">🔔 Notifications</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════ DASHBOARD TAB ══════════════ -->
+<div id="tab-dashboard" class="tab-content active">
+
+  <!-- Summary Cards -->
+  <div class="summary-row" id="summary-row">
+    <div class="scard"><div class="scard-label">Total Feeders</div><div class="scard-value accent" id="sc-total">—</div><div class="scard-sub">Online meters</div></div>
+    <div class="scard"><div class="scard-label">Voltage OK</div><div class="scard-value green" id="sc-vok">—</div><div class="scard-sub">Within ±limits</div></div>
+    <div class="scard"><div class="scard-label">Over Voltage</div><div class="scard-value red" id="sc-ov">—</div><div class="scard-sub" id="sc-ov-sub">GSS affected</div></div>
+    <div class="scard"><div class="scard-label">Under Voltage</div><div class="scard-value yellow" id="sc-uv">—</div><div class="scard-sub" id="sc-uv-sub">GSS affected</div></div>
+    <div class="scard"><div class="scard-label">Overloaded</div><div class="scard-value red" id="sc-ol">—</div><div class="scard-sub">&gt;100% of rating</div></div>
+    <div class="scard"><div class="scard-label">Feeder OFF</div><div class="scard-value orange" id="sc-off">—</div><div class="scard-sub" id="sc-off-sub">Tripped feeders</div></div>
+    <div class="scard"><div class="scard-label">Not Configured</div><div class="scard-value" style="color:var(--text3)" id="sc-nc">—</div><div class="scard-sub">No master match</div></div>
+  </div>
+
+  <!-- Weather Sensor Anomaly Banner — on-screen only, intentionally NEVER
+       part of the Management Report (which shows weather data only) -->
+  <div id="weather-anomaly-banner" style="display:none;background:rgba(255,145,0,0.08);border:1px solid var(--orange);border-radius:8px;padding:10px 16px;margin-bottom:10px">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="font-size:18px;line-height:1">⚠️</div>
+      <div style="flex:1">
+        <div style="font-size:11px;color:var(--orange);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px">Weather Station — Suspected Sensor Fault</div>
+        <div id="weather-anomaly-list" style="font-size:12.5px;color:var(--text2);line-height:1.6"></div>
+      </div>
+      <div style="cursor:pointer;color:var(--text3);font-size:16px;padding:2px 4px" onclick="document.getElementById('weather-anomaly-banner').style.display='none'">✕</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <!-- Peak Load Banner -->
+  <div id="peak-banner" style="display:none;background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;gap:24px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Today's Peak Demand</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--accent)" id="peak-daily-mw">—</div>
+          <div style="font-size:11px;color:var(--text2)" id="peak-daily-time"></div>
+        </div>
+        <div style="border-left:1px solid var(--border);padding-left:20px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Monthly Peak (<span id="peak-month-label"></span>)</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--yellow)" id="peak-month-mw">—</div>
+          <div style="font-size:11px;color:var(--text2)" id="peak-month-time"></div>
+        </div>
+        <div style="border-left:1px solid var(--border);padding-left:20px">
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Current Total</div>
+          <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--green)" id="total-mw-now">—</div>
+          <div style="font-size:11px;color:var(--text2)" id="total-mva-now"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost sm" onclick="exportPeaks()">⬇ Export Peaks</button>
+        <button class="btn ghost sm" style="color:var(--red)" onclick="resetMonthlyPeak()" title="Reset monthly peak for current month">↺ Reset Monthly</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-family:var(--font-head);font-size:13px;font-weight:600;color:var(--text2);letter-spacing:0.5px;margin-bottom:8px;margin-top:4px;">CIRCLE-WISE DEMAND</div>
+  <div id="circle-demand-row" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px"></div>
+
+  <!-- Filters -->
+  <div class="filter-row">
+    <span class="filter-label">Circle:</span>
+    <select id="flt-circle" onchange="applyFilters()">
+      <option value="">All Circles</option>
+    </select>
+    <span class="filter-label">Division:</span>
+    <select id="flt-div" onchange="applyFilters()">
+      <option value="">All Divisions</option>
+    </select>
+    <span class="filter-label">Show:</span>
+    <div class="badge active" id="bdg-all" onclick="setStatusFilter('all')">All</div>
+    <div class="badge" id="bdg-viol" onclick="setStatusFilter('violations')">⚠ Violations Only</div>
+    <div class="badge" id="bdg-ov" onclick="setStatusFilter('ov')">🔴 OV</div>
+    <div class="badge" id="bdg-uv" onclick="setStatusFilter('uv')">🟡 UV</div>
+    <div class="badge" id="bdg-ol" onclick="setStatusFilter('ol')">🔴 OL</div>
+    <input id="flt-search" type="text" placeholder="Search feeder / AssetCode…" style="min-width:200px" oninput="applyFilters()" autocomplete="off">
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th onclick="sortTable('AssetCode')">Meter ID</th>
+          <th onclick="sortTable('Circle')">Circle</th>
+          <th onclick="sortTable('Division')">Division</th>
+          <th onclick="sortTable('Gss')">GSS</th>
+          <th onclick="sortTable('Feeder')">Feeder</th>
+          <th onclick="sortTable('FeederType')">Type</th>
+          <th onclick="sortTable('Vavg')">V avg (kV)</th>
+          <th onclick="sortTable('Vr')">Vr</th>
+          <th onclick="sortTable('Vy')">Vy</th>
+          <th onclick="sortTable('Vb')">Vb</th>
+          <th onclick="sortTable('Imax')">I max (A)</th>
+          <th onclick="sortTable('LoadPct')">Load %</th>
+          <th onclick="sortTable('ApparentPower')">MVA</th>
+          <th onclick="sortTable('V_status')">V Status</th>
+          <th onclick="sortTable('I_status')">I Status</th>
+          <th>Data Age</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr><td colspan="16" class="empty-state"><div class="icon">📡</div><div>Click "Fetch Now" to load realtime data from Probus HES</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination" id="pagination"></div>
+
+</div>
+
+<!-- ══════════════ ALERT LOG TAB ══════════════ -->
+<div id="tab-alerts" class="tab-content">
+  <!-- Toolbar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div style="font-family:var(--font-head);font-size:17px;font-weight:600;color:var(--accent)">
+      Active Violation Alerts
+      <span id="alert-active-count" style="font-size:12px;color:var(--text3);font-weight:400;margin-left:8px"></span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <!-- Filter badges -->
+      <div class="badge active" id="af-all"   onclick="setAlertFilter('all')">All</div>
+      <div class="badge" id="af-active" onclick="setAlertFilter('active')">🔴 Active Only</div>
+      <div class="badge" id="af-ov"     onclick="setAlertFilter('OV')">⚡ OV</div>
+      <div class="badge" id="af-uv"     onclick="setAlertFilter('UV')">⬇ UV</div>
+      <div class="badge" id="af-ol"     onclick="setAlertFilter('OL')">🔴 OL</div>
+      <div class="badge" id="af-off"    onclick="setAlertFilter('FEEDER_OFF')">⚫ OFF</div>
+      <div class="badge" id="af-div"    onclick="setAlertFilter('LOAD_DIVERTED')">🔀 DIV</div>
+      <div class="badge" id="af-ptf"    onclick="setAlertFilter('PT_PHASE_MISSING')">⚠️ PTF</div>
+      <div class="badge" id="af-ljp"    onclick="setAlertFilter('LINE_JUMPER_PARTING')">⛓️ LJP</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn ghost sm" onclick="ackAllAlerts()">✓ Acknowledge All</button>
+      <button class="btn ghost sm" onclick="clearAlerts()" title="Delete resolved alerts older than 90 days from history">🗑 Purge Old (>90d)</button>
+      <button class="btn ghost sm" onclick="cleanupStaleAlerts()" title="Deactivate alerts with renamed/removed GSS">🔄 Cleanup Stale</button>
+      <button class="btn sm" onclick="toggleExportPanel()" style="background:var(--panel2)">⬇ Export</button>
+    </div>
+  </div>
+
+  <!-- Export Panel -->
+  <div id="export-panel" style="display:none;background:var(--panel);border:1px solid var(--border2);border-radius:8px;padding:14px;margin-bottom:14px">
+    <div style="font-family:var(--font-head);font-size:14px;color:var(--accent);margin-bottom:10px;font-weight:600">📥 Export Alert History</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">From Date</div>
+        <input type="date" id="export-start" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:6px 10px;font-size:12px;outline:none">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">To Date</div>
+        <input type="date" id="export-end" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:6px 10px;font-size:12px;outline:none">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px;text-transform:uppercase">Event Types</div>
+        <div id="export-type-checks" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm" onclick="doExport('csv')">⬇ CSV</button>
+        <button class="btn sm ghost" onclick="doExport('json')">⬇ JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="alert-list">
+    <div class="empty-state"><div class="icon">✅</div><div>No violations detected</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ GSS VIEW TAB ══════════════ -->
+<div id="tab-gss-view" class="tab-content">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-family:var(--font-head);font-size:17px;font-weight:600;color:var(--accent)">
+        GSS Substation View
+        <span id="gss-count" style="font-size:12px;color:var(--text3);font-weight:400;margin-left:8px"></span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">Select a GSS card to see all feeders</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="gss-search" type="text" placeholder="Search GSS..." oninput="filterGSS()"
+        style="background:var(--panel2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:7px 12px;font-size:12px;outline:none;width:180px">
+      <select id="gss-circle-filter" onchange="filterGSS()"
+        style="background:var(--panel2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:7px 10px;font-size:12px;outline:none">
+        <option value="">All Circles</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- GSS Cards Grid -->
+  <div id="gss-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:16px"></div>
+
+  <!-- Feeder Detail Panel (shown on card click) -->
+  <div id="gss-detail-panel" style="display:none">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <button onclick="closeGSSDetail()" style="background:var(--panel2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:5px 12px;font-size:12px;cursor:pointer">← Back</button>
+      <div id="gss-detail-title" style="font-family:var(--font-head);font-size:15px;font-weight:600;color:var(--accent)"></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:var(--panel2);color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:0.5px">
+          <th style="padding:8px 10px;text-align:left">Meter ID</th>
+          <th style="padding:8px 10px;text-align:left">Feeder</th>
+          <th style="padding:8px 10px;text-align:center">Type</th>
+          <th style="padding:8px 10px;text-align:right">V avg</th>
+          <th style="padding:8px 10px;text-align:right">Vr/Vy/Vb</th>
+          <th style="padding:8px 10px;text-align:right">Imax (A)</th>
+          <th style="padding:8px 10px;text-align:right">Load %</th>
+          <th style="padding:8px 10px;text-align:right">MVA</th>
+          <th style="padding:8px 10px;text-align:center">V</th>
+          <th style="padding:8px 10px;text-align:center">I</th>
+        </tr>
+      </thead>
+      <tbody id="gss-detail-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════ ALERT LOG TAB ══════════════ -->
+<div id="tab-load-events" class="tab-content">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-family:var(--font-head);font-size:17px;font-weight:600;color:var(--accent)">
+        Load Events
+        <span id="load-event-count" style="font-size:12px;color:var(--text3);font-weight:400;margin-left:8px"></span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">Sudden Load Drop / Rise events — each occurrence recorded</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="badge active" id="le-all"  onclick="setLeFilter('all')">All</div>
+      <div class="badge" id="le-drop" onclick="setLeFilter('SUDDEN_LOAD_DROP')">📉 Drop</div>
+      <div class="badge" id="le-raise" onclick="setLeFilter('SUDDEN_LOAD_RAISE')">📈 Raise</div>
+      <button class="btn ghost sm" onclick="clearLoadEvents()">🗑 Clear</button>
+    </div>
+  </div>
+  <div id="load-event-list">
+    <div class="empty-state"><div class="icon">📊</div><div>No load events yet</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ FEEDER MASTER TAB ══════════════ -->
+<div id="tab-feeder-master" class="tab-content">
+  <div class="master-toolbar">
+    <input class="search-box" id="master-search" type="text" placeholder="Search by AssetCode, Feeder, GSS…" oninput="renderMasterTable()">
+    <select id="master-circle-flt" onchange="renderMasterTable()" style="background:var(--panel2);border:1px solid var(--border2);color:var(--text);border-radius:5px;padding:7px 10px;font-size:12px;outline:none;">
+      <option value="">All Circles</option>
+    </select>
+    <button class="btn" onclick="openAddModal()">+ Add Feeder</button>
+    <button class="btn ghost" onclick="importFromLive()">↓ Import from Live Data</button>
+    <button class="btn" onclick="triggerExcelUpload()" style="background:var(--green2)">📂 Upload Excel</button>
+    <button class="btn ghost" onclick="downloadTemplate()">📋 Download Template</button>
+    <button class="btn ghost" onclick="exportMasterCSV()">⬇ Export CSV</button>
+    <!-- Hidden file input for Excel upload -->
+    <input type="file" id="excel-upload-input" accept=".xlsx,.xls,.csv"
+           style="display:none" onchange="handleExcelUpload(event)">
+  </div>
+
+  <!-- Upload progress bar -->
+  <div id="upload-progress" style="display:none;background:var(--panel);border:1px solid var(--border2);border-radius:6px;padding:10px 14px;margin-bottom:10px">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px" id="upload-status">Uploading…</div>
+    <div style="background:var(--border);border-radius:3px;height:4px;overflow:hidden">
+      <div id="upload-bar" style="background:var(--accent);height:100%;width:0%;transition:width 0.3s"></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>AssetCode (Meter ID)</th>
+          <th>Circle</th>
+          <th>Division</th>
+          <th>GSS</th>
+          <th>Feeder Name</th>
+          <th>Rating (A)</th>
+          <th>Vn (kV)</th>
+          <th>Type</th>
+          <th title="Power Sign: blank/+ = load (as-is), - = reverse CT, solar = generation">⚡ Sign</th>
+          <th>Linked?</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="master-tbody"></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="master-pagination"></div>
+</div>
+
+<!-- ══════════════ NOTIFICATIONS TAB ══════════════ -->
+<div id="tab-settings" class="tab-content">
+  <div class="settings-grid">
+
+    <!-- Probus Login Config -->
+    <div class="settings-section">
+      <h3>🔐 Probus HES Login</h3>
+      <div class="info-box">Credentials to scrape <strong>tpnodl.probussense.com</strong>. Uses Probus Export API endpoint.</div>
+      <div class="cred-row">
+        <div class="form-row"><label>Username</label><input id="cfg-user" type="text" value="" placeholder="Enter Probus username" autocomplete="new-password"></div>
+        <div class="form-row"><label>Password</label><input id="cfg-pass" type="password" placeholder="Password"></div>
+      </div>
+      <div class="form-row"><label>Role</label>
+        <select id="cfg-role"><option>Sense Admin</option><option>Admin</option><option>User</option></select>
+      </div>
+      <div class="form-row"><label>Auto-Fetch Interval</label>
+        <select id="cfg-interval">
+          <option value="0">Manual Only</option>
+          <option value="1">Every 1 minute</option>
+          <option value="2">Every 2 minutes</option>
+          <option value="3">Every 3 minutes</option>
+          <option value="4">Every 4 minutes</option>
+          <option value="5">Every 5 minutes</option>
+          <option value="10" selected>Every 10 minutes</option>
+          <option value="15">Every 15 minutes</option>
+          <option value="30">Every 30 minutes</option>
+        </select>
+      </div>
+      <button class="btn" onclick="saveLoginConfig()">💾 Save & Test Connection</button>
+    </div>
+
+    <!-- MB SCADA Weather -->
+    <div class="settings-section">
+      <h3>🌡️ WMS Weather Station Configuration</h3>
+      <div class="info-box">Manage MB SCADA PSS weather stations — powers the Circle-wise Weather
+        table in the Management Report. Each station maps to a TPNODL distribution circle.
+        New physical stations can be added here — no code change required.</div>
+      <button class="btn" onclick="openWeatherStationModal()">🌡️ Open Station Configuration</button>
+
+      <details style="margin-top:14px">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text3)">
+          Advanced: Login credentials (optional — only needed if the API ever requires auth)
+        </summary>
+        <div style="margin-top:10px">
+          <div class="cred-row">
+            <div class="form-row"><label>Username</label><input id="cfg-wx-user" type="text" value="" placeholder="MB SCADA username" autocomplete="new-password"></div>
+            <div class="form-row"><label>Password</label><input id="cfg-wx-pass" type="password" placeholder="Password"></div>
+          </div>
+          <div class="form-row"><label>Client / Company ID</label><input id="cfg-wx-company" type="text" value="TPNODL" placeholder="TPNODL"></div>
+          <button class="btn ghost" onclick="saveWeatherConfig()">💾 Save Login (Optional)</button>
+        </div>
+      </details>
+      <div id="wx-status" style="margin-top:8px;font-size:12px;color:var(--text3)"></div>
+    </div>
+
+    <!-- Voltage Thresholds -->
+    <div class="settings-section">
+      <h3>⚡ Voltage Thresholds</h3>
+      <div class="info-box">Standard: <strong>+6% OV / -9% UV</strong> of nominal voltage (Vn). Configurable per requirement.</div>
+      <div class="form-row"><label>Nominal Voltage Vn (kV)</label><input id="cfg-vn" type="number" value="33" step="0.1"></div>
+      <div class="form-inline">
+        <div class="form-row" style="flex:1"><label>OV Limit (+%)</label><input id="cfg-ov" type="number" value="6" min="0" max="20" step="0.5"></div>
+        <div class="form-row" style="flex:1"><label>UV Limit (-%)</label><input id="cfg-uv" type="number" value="9" min="0" max="20" step="0.5"></div>
+      </div>
+      <div id="vn-preview" style="font-size:11px;color:var(--text2);margin-bottom:12px;padding:8px;background:var(--bg3);border-radius:4px;font-family:var(--font-mono)"></div>
+      <div class="form-row"><label>Load Alert Threshold (%)</label><input id="cfg-load-thr" type="number" value="100" min="50" max="150"></div>
+      <div class="form-row"><label>OL Level-2 Threshold (%)</label><input id="cfg-ol-l2" type="number" value="110" min="100" max="200"></div>
+      <div class="form-row"><label>OL Level-3 Threshold (%)</label><input id="cfg-ol-l3" type="number" value="120" min="100" max="200"></div>
+      <div class="info-box" style="margin-top:10px">☀️ <strong>Solar Plant feeders</strong> (marked in Feeder Master) skip the standard FEEDER_OFF
+        check — 0A is normal during night/cloud cover/rain. Instead they use a tighter current
+        threshold + a confirmation wait period below, so weather doesn't trigger false outage alerts.</div>
+      <div class="form-inline">
+        <div class="form-row" style="flex:1"><label>Solar OFF Current Limit (A)</label><input id="cfg-solar-off-a" type="number" value="0.15" min="0" step="0.01"></div>
+        <div class="form-row" style="flex:1"><label>Solar OFF Wait Time (min)</label><input id="cfg-solar-off-wait" type="number" value="10" min="1" step="1"></div>
+      </div>
+      <button class="btn" onclick="saveVoltageConfig()">💾 Save Thresholds</button>
+    </div>
+
+    <!-- Notification Delay -->
+    <div class="settings-section">
+      <h3>⏱ Notification Delay (Active Since)</h3>
+      <div class="info-box">Set delay (0–240 min) before SMS/Email is sent per event type. 0 = immediate. Alert will be created immediately but notification held until delay elapses.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-row"><label>⚡ Over Voltage (min)</label><input id="nd-OV" type="number" value="15" min="0" max="240"></div>
+        <div class="form-row"><label>⬇ Under Voltage (min)</label><input id="nd-UV" type="number" value="60" min="0" max="240"></div>
+        <div class="form-row"><label>🔴 Overload L1 ≥100% (min)</label><input id="nd-OL_L1" type="number" value="10" min="0" max="240"></div>
+        <div class="form-row"><label>🔶 Overload L2 ≥110% (min)</label><input id="nd-OL_L2" type="number" value="0" min="0" max="240"></div>
+        <div class="form-row"><label>🔴 Overload L3 ≥120% (min)</label><input id="nd-OL_L3" type="number" value="0" min="0" max="240"></div>
+        <div class="form-row"><label>⚫ Feeder OFF / Trip (min)</label><input id="nd-FEEDER_OFF" type="number" value="10" min="0" max="240"></div>
+        <div class="form-row"><label>⚠️ PT Phase Missing (min)</label><input id="nd-PT_PHASE_MISSING" type="number" value="0" min="0" max="240"></div>
+        <div class="form-row"><label>⛓️ Line Jumper Parting (min)</label><input id="nd-LINE_JUMPER_PARTING" type="number" value="0" min="0" max="240"></div>
+        <div class="form-row"><label>🔀 Load Diverted BC (min)</label><input id="nd-LOAD_DIVERTED" type="number" value="0" min="0" max="240"></div>
+        <div class="form-row"><label>✅ Load Restored (min)</label><input id="nd-LOAD_RESTORED" type="number" value="0" min="0" max="240"></div>
+      </div>
+      <button class="btn" onclick="saveNotifyDelays()" style="margin-top:10px">💾 Save Delays</button>
+    </div>
+
+    <!-- Email Notifications -->
+    <div class="settings-section">
+      <h3>📧 Email Notifications</h3>
+      <div class="info-box">Configure SMTP and team email IDs. Alerts are sent when violations are detected on fetch.</div>
+      <div class="form-row" style="display:flex;align-items:center;gap:8px;background:var(--bg3);padding:10px;border-radius:6px">
+        <input type="checkbox" id="cfg-use-gmail-api" style="width:auto;margin:0" onchange="toggleGmailApiMode()">
+        <label for="cfg-use-gmail-api" style="margin:0;cursor:pointer">
+          🔐 Use Gmail API instead of SMTP (no port 587/465 needed — uses HTTPS/443 only)
+        </label>
+      </div>
+      <div id="gmail-api-note" class="info-box" style="display:none;font-size:11px">
+        ℹ️ For networks that block SMTP ports but allow normal HTTPS (e.g. browsers/WhatsApp Web work fine).
+        One-time setup required: run <code>gmail_oauth_setup.py</code> once on any machine with a browser to
+        authorize your Gmail account, then place the generated <code>data/gmail_token.json</code> in this
+        server's <code>data/</code> folder. After that, no SMTP fields below are used — sending happens
+        automatically via the Gmail API.
+      </div>
+
+      <!-- Multiple Gmail Accounts (splits recipients across them — each
+           account has its own independent daily sending quota) -->
+      <div id="gmail-multi-account-group" style="display:none;background:var(--bg3);border-radius:6px;padding:10px;margin-top:8px">
+        <div style="font-weight:600;font-size:12px;margin-bottom:6px">📨 Multiple Gmail Accounts (optional)</div>
+        <div class="info-box" style="font-size:10.5px;margin-bottom:8px">
+          Leave empty to send everything through the single Sender Email above. Add more accounts to split
+          recipients across them — each account only draws against its OWN daily quota, so 3 accounts roughly
+          triples effective daily capacity for the same recipient list. Run <code>gmail_oauth_setup.py</code>
+          again for each additional account, signed in as that account, and save its output to a distinct
+          filename (e.g. <code>data/gmail_token_2.json</code>).
+        </div>
+        <div id="gmail-accounts-list"></div>
+        <button class="btn ghost" onclick="addGmailAccountRow()" style="margin-top:6px">+ Add Gmail Account</button>
+      </div>
+
+      <div class="form-row" style="display:flex;align-items:center;gap:8px;background:var(--bg3);padding:10px;border-radius:6px;margin-top:8px">
+        <input type="checkbox" id="cfg-use-outlook-api" style="width:auto;margin:0" onchange="toggleOutlookApiMode()">
+        <label for="cfg-use-outlook-api" style="margin:0;cursor:pointer">
+          📩 Route Outlook/Microsoft-365 recipients via Microsoft Graph (separate quota + better deliverability)
+        </label>
+      </div>
+      <div id="outlook-api-note" class="info-box" style="display:none;font-size:11px">
+        ℹ️ Recipients whose email domain matches the list below are sent through Microsoft Graph instead of
+        Gmail — a completely separate sending quota, and mail arrives natively from an Outlook-ecosystem
+        sender, which avoids the DMARC/SPF/DKIM alignment failures that commonly cause Gmail/Google-Group-relayed
+        mail to be silently junked by Microsoft's strict mail servers. One-time setup: run
+        <code>outlook_oauth_setup.py</code> once (instructions in its docstring) to generate
+        <code>data/outlook_token.json</code>.
+        <div class="form-row" style="margin-top:8px"><label>Microsoft/Outlook domains to route this way (one per line or comma-separated)</label>
+          <textarea id="cfg-outlook-domains" placeholder="outlook.com&#10;hotmail.com&#10;live.com&#10;yourcompany.onmicrosoft.com"></textarea>
+        </div>
+      </div>
+      <div id="smtp-fields-group">
+        <div class="form-row"><label>SMTP Server</label><input id="cfg-smtp-host" type="text" value="smtp.gmail.com" placeholder="smtp.gmail.com"></div>
+        <div class="form-inline">
+          <div class="form-row" style="flex:1"><label>Port</label><input id="cfg-smtp-port" type="number" value="587"></div>
+          <div class="form-row" style="flex:1"><label>TLS</label><select id="cfg-smtp-tls"><option>STARTTLS</option><option>SSL</option><option>None</option></select></div>
+        </div>
+        <div class="form-row"><label>Sender Password / App Key</label><input id="cfg-smtp-pwd" type="password" placeholder="App password"></div>
+      </div>
+      <div class="form-row"><label>Sender Email</label><input id="cfg-smtp-from" type="email" placeholder="pscc@tpnodl.in"></div>
+      <div class="form-row"><label>🌐 Global Contacts — Recipient Emails (always notified for EVERY alert, one per line or comma-separated)</label>
+        <textarea id="cfg-email-to" placeholder="pscc@tpnodl.in&#10;ops.balasore@tpnodl.in&#10;ops.jajpur@tpnodl.in"></textarea>
+      </div>
+      <div class="form-row"><label>Alert Email Subject Prefix</label><input id="cfg-email-subj" type="text" value="[TPNODL ALERT]"></div>
+      <div class="form-row">
+        <label>Send Email Alert For</label>
+        <div id="email-event-types" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn" onclick="saveEmailConfig()">💾 Save</button>
+        <button class="btn ghost" onclick="discoverSmtp()">🔍 Discover SMTP</button>
+        <button class="btn ghost" onclick="pingSmtp()">🔌 Ping SMTP</button>
+        <button class="btn ghost" onclick="testEmail()">📤 Send Test Email</button>
+      </div>
+      <!-- SMTP Discovery Results -->
+      <div id="smtp-discover-panel" style="display:none;margin-top:10px;background:var(--bg3);border-radius:6px;padding:12px;font-size:12px">
+        <div style="font-weight:600;color:var(--accent);margin-bottom:8px">🔍 SMTP Server Scan Results</div>
+        <div id="smtp-discover-results"></div>
+      </div>
+    </div>
+
+    <!-- WhatsApp / SMS -->
+    <div class="settings-section">
+      <h3>📱 WhatsApp Notifications</h3>
+      <div class="info-box">
+        <strong>WhatsApp Web (Recommended)</strong> — Uses Chrome + Selenium. No API subscription needed.<br>
+        First use: Click "Open WhatsApp Web" → Chrome opens → scan QR with your phone → done.<br>
+        After QR scan, session is saved permanently. No re-scan needed on restart.
+      </div>
+      <div class="form-row"><label>Provider</label>
+        <select id="cfg-wa-provider" onchange="toggleWAFields()">
+          <option value="wa_web">WhatsApp Web (Chrome Automation)</option>
+          <option value="twilio">Twilio (WhatsApp Sandbox)</option>
+          <option value="meta">Meta WhatsApp Business API</option>
+          <option value="link">wa.me Link (Manual)</option>
+        </select>
+      </div>
+      <!-- WhatsApp Web fields -->
+      <div id="wa-web-fields">
+        <div id="wa-status-banner" style="background:var(--bg3);border-radius:6px;padding:12px;margin-bottom:12px;transition:background 0.5s,border 0.5s">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span id="wa-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--text3);display:inline-block;transition:background 0.4s"></span>
+            <span id="wa-status-text" style="font-size:12px;color:var(--text2);transition:color 0.4s">Not initialized — click Open WhatsApp Web</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm" onclick="autoConnectWA()" id="wa-connect-btn">🔗 Auto-connect to Chrome</button>
+            <button class="btn sm ghost" onclick="initWAWeb()" id="wa-init-btn">🌐 Open New WhatsApp Web</button>
+            <button class="btn sm ghost" onclick="checkWAStatus()">🔄 Check Status</button>
+            <button class="btn sm ghost" onclick="testWALaunch()">🔧 Test ChromeDriver</button>
+            <button class="btn sm ghost" onclick="closeWAWeb()">✕ Close</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">
+            💡 If WhatsApp Web is already open in Chrome, click <b>Auto-connect</b>. 
+            For first-time setup, click <b>Open New</b> and scan QR.
+          </div>
+        </div>
+        <div class="info-box" style="font-size:11px">
+          <b>Setup steps:</b><br>
+          1. Click "Open WhatsApp Web" → Chrome window opens automatically<br>
+          2. On your phone: WhatsApp → Menu → Linked Devices → Link a Device<br>
+          3. Scan the QR code shown in Chrome<br>
+          4. Status turns 🟢 green → click Save → Send Test Message
+        </div>
+      </div>
+      <!-- Twilio fields -->
+      <div id="wa-twilio-fields" style="display:none">
+        <div class="form-row"><label>Twilio Account SID</label><input id="cfg-wa-sid" type="text" placeholder="ACxxxxxxxxxxxxxxxx"></div>
+        <div class="form-row"><label>Twilio Auth Token</label><input id="cfg-wa-token" type="password" placeholder="Auth token"></div>
+        <div class="form-row"><label>Twilio WhatsApp From No.</label><input id="cfg-wa-from" type="text" placeholder="whatsapp:+14155238886"></div>
+      </div>
+      <!-- Meta fields -->
+      <div id="wa-meta-fields" style="display:none">
+        <div class="form-row"><label>Phone Number ID</label><input id="cfg-wa-phoneid" type="text" placeholder="1234567890"></div>
+        <div class="form-row"><label>Access Token</label><input id="cfg-wa-access" type="password" placeholder="Bearer token"></div>
+      </div>
+      <div class="form-row"><label>🌐 Global Contacts — WhatsApp Numbers (always notified for EVERY alert, in addition to any matching Dedicated Area Contact below; one per line, with country code)</label>
+        <textarea id="cfg-wa-numbers" placeholder="+919xxxxxxxxx&#10;+919xxxxxxxxx"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Send WhatsApp Alert For</label>
+        <div id="wa-event-types" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"></div>
+      </div>
+      <div class="form-row"><label>Alert Cooldown (minutes)</label>
+        <input id="cfg-wa-cooldown" type="number" value="30" min="5" max="240">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="saveWAConfig()">💾 Save</button>
+        <button class="btn ghost" onclick="detectWAXPaths()">🔍 Re-detect XPaths</button>
+        <button class="btn ghost" onclick="testWhatsApp()">📲 Send Test Message</button>
+      </div>
+    </div>
+
+    <!-- Management Hourly Report -->
+    <div class="settings-section section-full">
+      <h3>📊 Management Hourly Report</h3>
+      <div class="info-box">Periodic summarised report with active alerts + circle demand sent to management. Includes smart BC diversion matching.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-row"><label>Enable</label>
+          <select id="mgmt-enabled"><option value="true">Enabled</option><option value="false">Disabled</option></select>
+        </div>
+        <div class="form-row"><label>Interval</label>
+          <select id="mgmt-interval">
+            <option value="30">Every 30 min</option>
+            <option value="60">Every 1 hour</option>
+            <option value="120">Every 2 hours</option>
+            <option value="180">Every 3 hours</option>
+            <option value="240">Every 4 hours</option>
+          </select>
+        </div>
+        <div class="form-row"><label>From Address</label><input id="mgmt-from" type="text" placeholder="psc.tpnodl@tpnodl.com"></div>
+        <div class="form-row"><label>Password</label><input id="mgmt-password" type="password" placeholder="Leave blank = same as Email config"></div>
+        <div class="form-row"><label>SMTP Host</label><input id="mgmt-smtp-host" type="text" placeholder="Leave blank = same as Email config"></div>
+        <div class="form-row"><label>Port / TLS</label>
+          <input id="mgmt-smtp-port" type="number" value="587" style="width:70px">
+          <select id="mgmt-tls" style="margin-left:8px">
+            <option value="STARTTLS">STARTTLS</option><option value="SSL">SSL</option><option value="None">None</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:8px"><label>Management Email Recipients (one per line)</label>
+        <textarea id="mgmt-recipients" rows="3" placeholder="gm.op@tpnodl.com&#10;suptd.pscc@tpnodl.com" style="font-size:12px"></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:8px"><label>Management WhatsApp Numbers (with country code, one per line)</label>
+        <textarea id="mgmt-wa-recipients" rows="2" placeholder="+919437000000&#10;+919437000001" style="font-size:12px"></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:8px"><label>Feeder Whitelist — Meter IDs (blank = all feeders)</label>
+        <textarea id="mgmt-whitelist" rows="2" placeholder="TPN61062&#10;TPN61063" style="font-size:12px"></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:8px"><label>Feeder Blacklist — exclude these Meter IDs</label>
+        <textarea id="mgmt-blacklist" rows="2" placeholder="TPN61246" style="font-size:12px"></textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="saveMgmtReport()">💾 Save</button>
+        <button class="btn ghost" onclick="sendMgmtReportNow()">📤 Send Report Now</button>
+      </div>
+    </div>
+
+    <!-- Contact Directory -->
+    <div class="settings-section section-full">
+      <h3>📋 Dedicated Area Contacts (Circle / Division)</h3>
+      <div class="info-box">🌐 Global Contacts (configured above, in Email/WhatsApp Notifications) are ALWAYS notified for every alert.
+        Map a circle/division here to ADD dedicated contacts on top, for that area specifically — every matching alert reaches
+        BOTH the global contacts AND this area's contacts, not one or the other.</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn sm" onclick="openContactModal()">+ Add Dedicated Area Contact</button>
+      </div>
+      <table class="contact-table">
+        <thead>
+          <tr><th>Circle</th><th>Division</th><th>Emails</th><th>WhatsApp Nos.</th><th>Active</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="contact-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- ─── ADD / EDIT FEEDER MODAL ─── -->
+<div class="modal-overlay" id="feeder-modal">
+  <div class="modal">
+    <h2 id="modal-title">Add Feeder</h2>
+    <input type="hidden" id="modal-edit-idx" value="">
+    <div class="form-row"><label>AssetCode / Meter ID <span style="color:var(--red)">*</span></label><input id="m-asset" type="text" placeholder="e.g. TPN61655"></div>
+    <div class="form-row"><label>Circle <span style="color:var(--red)">*</span></label>
+      <select id="m-circle">
+        <option>BALASORE</option><option>JAJPUR</option><option>BARIPADA</option><option>KEONJHAR</option><option>BHADRAK</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Division <span style="color:var(--red)">*</span></label><input id="m-division" type="text" placeholder="e.g. BTED, Basta"></div>
+    <div class="form-row"><label>GSS</label><input id="m-gss" type="text" placeholder="e.g. 132/33 KV BASTA"></div>
+    <div class="form-row"><label>Feeder Name <span style="color:var(--red)">*</span></label><input id="m-feeder" type="text" placeholder="e.g. 33 KV RAJGHAT FDR."></div>
+    <div class="form-inline">
+      <div class="form-row" style="flex:1"><label>Rating (A) <span style="color:var(--red)">*</span></label><input id="m-rating" type="number" placeholder="e.g. 200" min="1"></div>
+      <div class="form-row" style="flex:1"><label>Voltage Vn (kV)</label><input id="m-vn" type="number" value="33" min="1"></div>
+    </div>
+    <div class="form-row"><label>Feeder Type</label>
+      <select id="m-type"><option>Priority</option><option>Non-Priority</option></select>
+    </div>
+    <div class="form-row"><label>Power Sign</label>
+      <select id="m-sign" title="Controls MW sign. Blank/+ = as-is from HES. '-' = reverse sign (for reverse-CT feeders). Solar = generation (keep negative as positive generation)">
+        <option value="">+ (Default — load feeder, MW as extracted)</option>
+        <option value="-">- (Reverse CT — negate MW from HES)</option>
+        <option value="solar">Solar (Generation — show as +ve generation)</option>
+      </select>
+    </div>
+    <div class="form-row" id="m-sign-note" style="font-size:11px;color:var(--text3);padding:4px 0 0 0;display:none">
+      ℹ Reverse CT: HES shows -ve MW for a load feeder. Setting '-' negates it to +ve. Solar feeders export power, shown as generation (MW stays negative = generation).
+    </div>
+    <div class="form-row" style="display:flex;align-items:center;gap:8px;margin-top:8px">
+      <input type="checkbox" id="m-solar" style="width:auto;margin:0">
+      <label for="m-solar" style="margin:0;cursor:pointer" title="0A/low current is normal for solar (night, cloud cover, rain) — uses a tighter threshold + wait-time confirmation instead of the standard immediate FEEDER_OFF, so weather doesn't trigger false outage alerts">
+        ☀️ Solar Plant (0A is normal during low-sun — uses delayed/tightened OFF detection)
+      </label>
+    </div>
+    <div class="form-row"><label>Legacy FeederCode (optional)</label><input id="m-fcode" type="text" placeholder="e.g. 43207402004"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="saveFeeder()">💾 Save Feeder</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── MARK FIELD DIVERSION MODAL ─── -->
+<div class="modal-overlay" id="field-div-modal">
+  <div class="modal">
+    <h2>🔀 Mark Load Diverted (Field Device)</h2>
+    <div class="info-box" style="font-size:11px;margin-bottom:10px">
+      Use this when load was actually diverted through a field jumper/switch —
+      NOT through the monitored Bus Coupler — so automatic detection couldn't
+      see it. Select the GSS &amp; Feeder the load is now actually flowing through.
+    </div>
+    <input type="hidden" id="fd-alert-id" value="">
+    <input type="hidden" id="fd-asset-code" value="">
+    <div class="form-row">
+      <label>OFF Feeder</label>
+      <input type="text" id="fd-off-feeder-display" disabled style="opacity:0.7">
+    </div>
+    <div class="form-row">
+      <label>Diverted Through (Source GSS &amp; Feeder) <span style="color:var(--red)">*</span></label>
+      <input type="text" id="fd-source-search" placeholder="Type to search feeder/GSS name..."
+        oninput="filterFieldDiversionOptions()" autocomplete="off">
+      <select id="fd-source-select" size="6" style="margin-top:4px"
+        onchange="onFieldDiversionSourceSelected()"></select>
+    </div>
+    <div class="form-row">
+      <label>Diversion Date &amp; Time <span style="color:var(--red)">*</span></label>
+      <input type="datetime-local" id="fd-diversion-time">
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">
+        When the diversion actually happened in the field — not necessarily now.
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Note (optional)</label>
+      <textarea id="fd-note" placeholder="e.g. Jumper closed to adjacent feeder per field crew report, ref ticket #1234" style="min-height:50px"></textarea>
+    </div>
+    <div class="form-row">
+      <label>Marked By</label>
+      <input type="text" id="fd-marked-by" placeholder="Your name/ID (optional)">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeFieldDivModal()">Cancel</button>
+      <button class="btn" onclick="submitFieldDiversionMark()">🔀 Mark as Diverted</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DEDICATED AREA CONTACT MODAL ─── -->
+<div class="modal-overlay" id="contact-modal">
+  <div class="modal">
+    <h2 id="contact-modal-title">📋 Add Dedicated Area Contact</h2>
+    <div class="info-box" style="font-size:11px;margin-bottom:10px">
+      These contacts are notified IN ADDITION to your Global Contacts (set in the Email/WhatsApp
+      Notifications sections above) — never instead of them. Enter multiple emails/numbers one per
+      line OR comma-separated, either works — paste a whole list at once if you like.
+    </div>
+    <input type="hidden" id="contact-modal-idx" value="">
+    <div class="form-row">
+      <label>Circle <span style="color:var(--text3);font-size:10px">(leave blank = matches all circles)</span></label>
+      <input type="text" id="contact-circle" placeholder="e.g. Balasore">
+    </div>
+    <div class="form-row">
+      <label>Division <span style="color:var(--text3);font-size:10px">(leave blank = matches all divisions)</span></label>
+      <input type="text" id="contact-division" placeholder="e.g. BED, Balasore">
+    </div>
+    <div class="form-row">
+      <label>Emails <span style="color:var(--text3);font-size:10px">(one per line or comma-separated — paste a whole list at once)</span></label>
+      <textarea id="contact-emails" placeholder="ops.balasore@tpnodl.in, supervisor.balasore@tpnodl.in" style="min-height:70px"></textarea>
+    </div>
+    <div class="form-row">
+      <label>WhatsApp Numbers <span style="color:var(--text3);font-size:10px">(with country code — one per line or comma-separated)</span></label>
+      <textarea id="contact-wanos" placeholder="+919437000001, +919437000002" style="min-height:70px"></textarea>
+    </div>
+    <div class="form-row" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="contact-active" style="width:auto;margin:0" checked>
+      <label for="contact-active" style="margin:0;cursor:pointer">Active</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeContactModal()">Cancel</button>
+      <button class="btn" onclick="submitContactModal()">💾 Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── WEATHER STATION CONFIGURATION MODAL ─── -->
+<div class="modal-overlay" id="weather-station-modal">
+  <div class="modal" style="max-width:1100px;width:95vw">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h2 style="margin:0">🌡️ WMS Weather Station Configuration</h2>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost sm" onclick="addWeatherStationRow()">+ Add Station</button>
+        <button class="btn sm" onclick="saveWeatherStations()">💾 Save</button>
+        <button class="btn ghost sm" onclick="closeWeatherStationModal()">✕ Close</button>
+      </div>
+    </div>
+
+    <div class="info-box" style="font-size:11px;margin-bottom:12px">
+      Each row defines one PSS weather station. The <strong>Site ID</strong> must match the
+      station's siteId in MB SCADA (e.g. "1004_01"). The <strong>Representative Circle</strong>
+      determines which TPNODL distribution circle this station's data is used for. New physical
+      WMS stations can be added here — no code change required. If multiple stations share the
+      same circle, their readings are weight-averaged.
+    </div>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px" id="ws-table">
+        <thead>
+          <tr style="text-align:left;color:var(--text3);border-bottom:1px solid var(--border)">
+            <th style="padding:6px 4px">Active</th>
+            <th style="padding:6px 4px">Site ID</th>
+            <th style="padding:6px 4px">Display Name</th>
+            <th style="padding:6px 4px">Location / Area</th>
+            <th style="padding:6px 4px">Representative Circle</th>
+            <th style="padding:6px 4px">Weight</th>
+            <th style="padding:6px 4px">Test</th>
+            <th style="padding:6px 4px"></th>
+          </tr>
+        </thead>
+        <tbody id="ws-table-body"></tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)">
+        Coverage map — circles assigned to stations
+      </div>
+      <div id="ws-coverage-map" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+    </div>
+
+    <div class="info-box" style="font-size:10.5px;margin-top:14px">
+      📌 <strong>Circle ↔ Station mapping logic:</strong> If a circle has no directly assigned
+      station, it shows "No station" and the Circle-wise Weather table will display "—" for that
+      circle. Multiple stations can share the same circle — their readings are averaged
+      (weighted by the Weight column).
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST AREA ─── -->
+<div id="toast-area"></div>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// TPNODL Monitor v2 — Backend-Integrated Frontend
+// All data flows through Flask backend at same origin.
+// ═══════════════════════════════════════════════════════════════
+
+const BACKEND = window.location.origin; // http://10.40.107.137:7777
+
+// ── API helper ───────────────────────────────────────────────
+async function api(method, path, body) {
+  try {
+    const opts = { method, headers: {'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(BACKEND + path, opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch(e) {
+    console.error('API', method, path, e.message);
+    return null;
+  }
+}
+
+// ── State ────────────────────────────────────────────────────
+let liveData      = [];
+let feederMaster  = [];
+let alertLog      = [];
+let currentTab    = 'dashboard';
+let statusFilter  = 'all';
+let sortKey       = 'Circle';
+let sortDir       = 1;
+let dashPage      = 1;
+let masterPage    = 1;
+let thresholds    = { ov_limit: 34.98, uv_limit: 30.03, vn: 33, off_a: 1 };
+const PAGE_SIZE   = 30;
+let autoRefreshTimer = null;
+
+// ── Init ────────────────────────────────────────────────────
+window.onload = async function() {
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Load config + feeder master from backend
+  await loadConfig();
+  await loadFeeders();
+
+  // Load live data from backend (cached snapshot)
+  await refreshLiveData();
+
+  // Start auto-refresh
+  startAutoRefresh();
+
+  populateCircleFilters();
+  renderMasterTable();
+  renderAlerts();
+  updateVnPreview();
+  applySettingsToUI();
+
+  // Poll alerts every 30s
+  setInterval(pollAlerts, 30000);
+  setInterval(pollBcPending, 15000);  // check pending diversions every 15s
+  // Refresh "Active Since" timers every 60s without full re-render
+  setInterval(() => { if (currentTab === 'alerts') renderAlerts(); }, 60000);
+
+  // Weather station sensor-fault notification — on-screen ONLY, never
+  // part of the Management Report. Polled independently of /api/live
+  // since weather refreshes on its own ~5min cycle on the backend.
+  pollWeatherAnomalies();
+  setInterval(pollWeatherAnomalies, 60000);
+};
+
+// ═══════════════════════════════════════════════════════════════
+// BACKEND DATA LOADERS
+// ═══════════════════════════════════════════════════════════════
+async function loadConfig() {
+  const d = await api('GET', '/api/config');
+  if (!d) return;
+  // Sync voltage thresholds
+  const v = d.voltage || {};
+  thresholds.vn       = v.vn_kv || 33;
+  thresholds.ov_limit = thresholds.vn * (1 + (v.ov_pct || 6) / 100);
+  thresholds.uv_limit = thresholds.vn * (1 - (v.uv_pct || 9) / 100);
+  thresholds.off_a    = v.feeder_off_threshold_a || 1;
+  thresholds.loadThr  = v.load_threshold_pct || 100;
+  // Sync UI fields
+  if (document.getElementById('cfg-vn'))       document.getElementById('cfg-vn').value       = v.vn_kv || 33;
+  if (document.getElementById('cfg-ov'))       document.getElementById('cfg-ov').value       = v.ov_pct || 6;
+  if (document.getElementById('cfg-uv'))       document.getElementById('cfg-uv').value       = v.uv_pct || 9;
+  if (document.getElementById('cfg-load-thr')) document.getElementById('cfg-load-thr').value = v.load_threshold_pct || 100;
+  if (document.getElementById('cfg-ol-l2'))    document.getElementById('cfg-ol-l2').value    = v.ol_l2_pct || 110;
+  if (document.getElementById('cfg-ol-l3'))    document.getElementById('cfg-ol-l3').value    = v.ol_l3_pct || 120;
+  if (document.getElementById('cfg-solar-off-a'))    document.getElementById('cfg-solar-off-a').value    = v.solar_off_threshold_a ?? 0.15;
+  if (document.getElementById('cfg-solar-off-wait')) document.getElementById('cfg-solar-off-wait').value = v.solar_off_wait_minutes ?? 10;
+  // Load notification delays
+  loadNotifyDelays(d);
+  const s = d.scraper || {};
+  if (document.getElementById('cfg-user'))     document.getElementById('cfg-user').value     = s.username || '';
+  if (document.getElementById('cfg-interval')) document.getElementById('cfg-interval').value = s.interval_minutes || 10;
+
+  // Weather config — separate file/endpoint from main config, fetched
+  // independently. Password is never echoed back by the server (write-
+  // only field) — only username/company populate on reload.
+  api('GET', '/api/weather/config').then(wr => {
+    if (wr?.ok) {
+      if (document.getElementById('cfg-wx-user'))    document.getElementById('cfg-wx-user').value    = wr.mbscada_user || '';
+      if (document.getElementById('cfg-wx-company')) document.getElementById('cfg-wx-company').value = wr.mbscada_company || 'TPNODL';
+    }
+  }).catch(() => {});
+  const e = d.email || {};
+  if (document.getElementById('cfg-use-gmail-api')) document.getElementById('cfg-use-gmail-api').checked = !!e.use_gmail_api;
+  if (document.getElementById('cfg-smtp-host'))  document.getElementById('cfg-smtp-host').value  = e.smtp_host || 'smtp.gmail.com';
+  if (document.getElementById('cfg-smtp-port'))  document.getElementById('cfg-smtp-port').value  = e.smtp_port || 587;
+  if (document.getElementById('cfg-smtp-from'))  document.getElementById('cfg-smtp-from').value  = e.from_addr || '';
+  if (document.getElementById('cfg-email-to'))   document.getElementById('cfg-email-to').value   = (e.recipients||[]).join('\n');
+  if (document.getElementById('cfg-email-subj')) document.getElementById('cfg-email-subj').value = e.subject_prefix || '[TPNODL ALERT]';
+  setGmailAccountsInUI(e.gmail_accounts || []);
+  if (document.getElementById('cfg-use-outlook-api')) document.getElementById('cfg-use-outlook-api').checked = !!e.use_outlook_api;
+  if (document.getElementById('cfg-outlook-domains')) document.getElementById('cfg-outlook-domains').value =
+    (e.outlook_domains || ['outlook.com','hotmail.com','live.com','msn.com']).join('\n');
+  toggleGmailApiMode();
+  toggleOutlookApiMode();
+  // Email event type checkboxes
+  renderEventTypeChecks('email-event-types', e.alert_types || null);
+  const w = d.whatsapp || {};
+  if (document.getElementById('cfg-wa-provider')) document.getElementById('cfg-wa-provider').value = w.provider || 'wa_web';
+  if (document.getElementById('cfg-wa-numbers'))  document.getElementById('cfg-wa-numbers').value  = (w.recipients||[]).join('\n');
+  if (document.getElementById('cfg-wa-cooldown')) document.getElementById('cfg-wa-cooldown').value = w.cooldown_minutes || 30;
+  if (document.getElementById('cfg-wa-sid'))      document.getElementById('cfg-wa-sid').value      = w.twilio_sid || '';
+  if (document.getElementById('cfg-wa-from'))     document.getElementById('cfg-wa-from').value     = w.twilio_from || '';
+  if (document.getElementById('cfg-wa-phoneid'))  document.getElementById('cfg-wa-phoneid').value  = w.meta_phone_id || '';
+  // WA event type checkboxes
+  renderEventTypeChecks('wa-event-types', w.alert_types || null);
+  toggleWAFields();
+  // Contacts
+  if (d.contacts) renderContactTable(d.contacts);
+  updateVnPreview();
+  // Check WA Web status
+  checkWAStatus();
+}
+
+async function loadFeeders() {
+  const d = await api('GET', '/api/feeders');
+  if (d && d.data) {
+    feederMaster = d.data;
+    // Sync master circle filter options
+    populateMasterCircleFilter();
+  }
+}
+
+async function refreshLiveData(showSpinner = false) {
+  const d = await api('GET', '/api/live');
+  if (!d) return;
+  liveData = d.data || [];
+  if (d.thresholds) {
+    thresholds = { ...thresholds, ...d.thresholds };
+  }
+  const fetchedAt = d.fetched_at
+    ? 'Last fetch: ' + new Date(d.fetched_at).toLocaleTimeString('en-IN')
+    : 'No data yet';
+  document.getElementById('last-fetch').textContent = fetchedAt;
+  renderDashboard();
+  loadDemandSummary();
+  // Auto-refresh GSS view if on that tab
+  if (currentTab === 'gss-view') loadGSSView();
+}
+
+async function loadDemandSummary() {
+  const d = await api('GET', '/api/demand-summary');
+  if (!d || !d.circles) return;
+  renderDemandCards(d);
+}
+
+function renderDemandCards(d) {
+  const el = document.getElementById('circle-demand-row');
+  if (!el) return;
+  const circles = d.circles || [];
+
+  // Update peak banner
+  const banner = document.getElementById('peak-banner');
+  if (banner && (d.total_peak_daily_mw || d.total_mw)) {
+    banner.style.display = 'block';
+    const pdmw = d.total_peak_daily_mw || d.total_mw || 0;
+    const pmmw = d.total_peak_month_mw || d.total_mw || 0;
+    document.getElementById('peak-daily-mw').textContent  = pdmw.toFixed(3) + ' MW';
+    document.getElementById('peak-month-mw').textContent  = pmmw.toFixed(3) + ' MW';
+    document.getElementById('peak-month-label').textContent = (d.peak_month || '').slice(0,7);
+    document.getElementById('total-mw-now').textContent   = (d.total_mw||0).toFixed(3) + ' MW';
+    document.getElementById('total-mva-now').textContent  = (d.total_mva||0).toFixed(3) + ' MVA';
+    // Show peak time from total daily peak
+    const pdtime = d.total_peak_daily_time || d.circles?.reduce((a,c)=>c.peak_daily_time||a,'');
+    const pmtime = d.total_peak_month_time || d.circles?.reduce((a,c)=>c.peak_month_time||a,'');
+    const fmtT = t => { try { return 'at ' + new Date(t).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true}); } catch{return '';} };
+    if (pdtime) document.getElementById('peak-daily-time').textContent = fmtT(pdtime);
+    if (pmtime) document.getElementById('peak-month-time').textContent = fmtT(pmtime);
+  }
+
+  if (!circles.length) { el.innerHTML = ''; return; }
+  el.innerHTML = circles.map(c => {
+    const hasPrev  = c.MW_prev !== null && c.MW_prev !== undefined;
+    const mwDelta  = hasPrev ? (c.MW_now - c.MW_prev) : null;
+    const deltaClass = mwDelta > 0 ? 'demand-delta-up' : 'demand-delta-dn';
+    const deltaArrow = mwDelta > 0 ? '▲' : '▼';
+    const isPeak_d = c.MW_now >= (c.peak_daily_mw  || 0);
+    const isPeak_m = c.MW_now >= (c.peak_month_mw  || 0);
+
+    return `<div class="demand-card" style="${isPeak_m?'border-color:var(--yellow)':''}">
+      <div class="demand-card-title">${c.Circle}</div>
+      <div class="demand-metric">
+        <span class="demand-label">MW Now</span>
+        <span class="demand-val" style="color:${isPeak_m?'var(--yellow)':'var(--text)'}">${c.MW_now.toFixed(3)}</span>
+      </div>
+      <div class="demand-metric">
+        <span class="demand-label">MVA Now</span>
+        <span class="demand-val">${c.MVA_now.toFixed(3)}</span>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px">
+        <div class="demand-metric">
+          <span class="demand-label" style="color:var(--accent)">Today Peak</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">${(c.peak_daily_mw||c.MW_now).toFixed(3)}</span>
+        </div>
+        <div class="demand-metric">
+          <span class="demand-label" style="color:var(--yellow)">Month Peak</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--yellow)">${(c.peak_month_mw||c.MW_now).toFixed(3)}</span>
+        </div>
+      </div>
+      ${hasPrev
+        ? `<div class="demand-prev">${c.prev_label||'Yesterday'}: <b>${c.MW_prev.toFixed(3)} MW</b><br>
+           <span class="${deltaClass}">${deltaArrow} ${Math.abs(mwDelta).toFixed(3)} MW vs yesterday same time</span></div>`
+        : `<div class="demand-prev" style="color:var(--text3)">Yesterday: collecting data…</div>`}
+      ${c.ol_count > 0 ? `<div style="font-size:10px;color:var(--red);margin-top:3px">⚠ ${c.ol_count} overloaded</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function exportPeaks() {
+  const now   = new Date();
+  const month = now.toISOString().slice(0,7);
+  const start = prompt('From month (YYYY-MM):', month) || month;
+  const end   = prompt('To month (YYYY-MM):',   month) || month;
+  window.open(`${BACKEND}/api/peak/export?start=${start}&end=${end}&fmt=csv`,'_blank');
+}
+
+async function resetMonthlyPeak() {
+  const month = new Date().toISOString().slice(0,7);
+  if (!confirm(`Reset monthly peak for ${month}? This cannot be undone.`)) return;
+  const r = await api('POST','/api/peak/reset',{month});
+  if (r?.ok) showToast(`✅ Monthly peak reset for ${month}`, 'success');
+  loadDemandSummary();
+}
+
+async function pollBcPending() {
+  const d = await api('GET', '/api/bc-pending');
+  if (!d || !d.pending) return;
+
+  const pendingFeeders = new Set();
+  const pendingBCs     = new Set();
+  d.pending.forEach(p => {
+    (p.feeder_assets || []).forEach(ac => pendingFeeders.add(ac));
+    if (p.bc_asset) pendingBCs.add(p.bc_asset);
+  });
+
+  // Apply/remove blinking on all alert card rows and dashboard feeder rows
+  document.querySelectorAll('[data-asset]').forEach(el => {
+    const ac = el.getAttribute('data-asset');
+    if (pendingFeeders.has(ac) || pendingBCs.has(ac)) {
+      el.classList.add('bc-pending-blink');
+      el.title = 'BC Diversion under confirmation...';
+    } else {
+      el.classList.remove('bc-pending-blink');
+    }
+  });
+
+  // Show/hide pending indicator badge on DIV filter button
+  const divBtn = document.getElementById('af-div');
+  if (divBtn) {
+    const count = d.pending.length;
+    if (count > 0) {
+      divBtn.innerHTML = `DIV <span style="background:var(--orange);color:#fff;
+        border-radius:3px;padding:0 5px;font-size:10px;animation:blink 1s infinite"
+        title="BC diversion under confirmation">${count} pending</span>`;
+    } else {
+      divBtn.textContent = 'DIV';
+    }
+  }
+}
+
+async function pollAlerts() {
+  const d = await api('GET', '/api/alerts?limit=1000');
+  if (!d) return;
+  const newAlerts = (d.data || []).filter(a =>
+    !['SUDDEN_LOAD_DROP','SUDDEN_LOAD_RAISE'].includes(a.type)
+  );
+  // If new unacked active alerts arrived since last poll, reset ackAll flag
+  // so operators see the new events
+  if (window._alertUserAckedAll) {
+    const prevIds = new Set((alertLog || []).map(a => a.id));
+    const hasNew  = newAlerts.some(a => a.is_active && !a.acked && !prevIds.has(a.id));
+    if (hasNew) window._alertUserAckedAll = false;
+  }
+  alertLog = newAlerts;
+
+  // Field-level diversion marks (manual operator annotations) — merge onto
+  // matching alerts by id so the card renderer can show "Field Marked"
+  // info and the correct button state (Mark vs Unmark) without a separate
+  // round-trip per card. Gracefully no-ops if the endpoint 404s/503s
+  // (field_diversion module not installed on this server).
+  try {
+    const fdResp = await api('GET', '/api/field-diversion/active');
+    const marksByAlertId = {};
+    (fdResp?.marks || []).forEach(m => { marksByAlertId[m.alert_id] = m; });
+    alertLog.forEach(a => { a._fieldMark = marksByAlertId[a.id] || null; });
+  } catch (e) { /* field diversion feature not available — ignore */ }
+
+  // Load Events: fetch separately with higher limit to preserve event history
+  const le = await api('GET', '/api/alerts?limit=200&type=SUDDEN_LOAD_DROP');
+  const lr = await api('GET', '/api/alerts?limit=200&type=SUDDEN_LOAD_RAISE');
+  const sldArr = (le?.data || []);
+  const slrArr = (lr?.data || []);
+  // Also include any SLD/SLR already in main fetch (dedup by id)
+  const fromMain = (d.data || []).filter(a => ['SUDDEN_LOAD_DROP','SUDDEN_LOAD_RAISE'].includes(a.type));
+  const leMap = {};
+  [...sldArr, ...slrArr, ...fromMain].forEach(a => { leMap[a.id] = a; });
+  loadEventLog = Object.values(leMap).sort((a,b) => (b.first_seen||'').localeCompare(a.first_seen||''));
+  renderAlerts();
+  // Update main badge (alert log)
+  const unacked = (d.summary || {}).unacked || 0;
+  const badge = document.getElementById('alert-count-badge');
+  if (badge) {
+    badge.textContent = unacked;
+    badge.style.display = unacked > 0 ? 'inline' : 'none';
+  }
+  // Update load events badge
+  const leUnacked = loadEventLog.filter(a => !a.acked).length;
+  const leBadge = document.getElementById('load-event-badge');
+  if (leBadge) {
+    leBadge.textContent = leUnacked;
+    leBadge.style.display = leUnacked > 0 ? 'inline' : 'none';
+  }
+  if (currentTab === 'load-events') renderLoadEvents();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WEATHER SENSOR ANOMALY NOTIFICATION — on-screen only.
+// Intentionally separate from the Management Report, which shows ONLY
+// the weather data table (avg temp/humidity/rainfall/wind) with no fault
+// remarks. A suspected sensor fault (exact-zero reading that DID report,
+// or a frozen/non-communicating sensor) should still reach the operator
+// live, just via the dashboard rather than cluttering the report.
+// ═══════════════════════════════════════════════════════════════
+let _seenWeatherAnomalies = new Set();
+
+async function pollWeatherAnomalies() {
+  const d = await api('GET', '/api/weather/anomalies');
+  if (!d || !d.ok) return;
+  const anomalies = d.anomalies || [];
+
+  const banner = document.getElementById('weather-anomaly-banner');
+  const listEl = document.getElementById('weather-anomaly-list');
+  if (!banner || !listEl) return;
+
+  if (anomalies.length === 0) {
+    banner.style.display = 'none';
+    _seenWeatherAnomalies.clear();
+    return;
+  }
+
+  // Persistent banner — always reflects the current full set of active
+  // anomalies (so closing/reopening the dashboard, or dismissing the
+  // banner, never hides a fault that's still ongoing on the NEXT poll).
+  listEl.innerHTML = anomalies.map(a =>
+    `<div>📍 <b>${a.circle}</b> — ${a.message}</div>`
+  ).join('');
+  banner.style.display = 'block';
+
+  // Toast — only ONCE per distinct message, so an unresolved fault
+  // doesn't re-toast every 60s while it's still active. The toast set
+  // resets for a message once it's no longer present (i.e. it cleared),
+  // so if the same fault recurs later it toasts again.
+  const currentMsgs = new Set(anomalies.map(a => a.message));
+  anomalies.forEach(a => {
+    if (!_seenWeatherAnomalies.has(a.message)) {
+      showToast(`⚠️ ${a.circle}: ${a.message}`, 'warn');
+    }
+  });
+  _seenWeatherAnomalies = currentMsgs;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FETCH NOW BUTTON — triggers backend scrape cycle
+// ═══════════════════════════════════════════════════════════════
+async function fetchData() {
+  const btn  = document.getElementById('fetchBtn');
+  const icon = document.getElementById('fetchIcon');
+  btn.classList.add('loading');
+  icon.innerHTML = '<div class="spinner"></div>';
+
+  // Record current fetch time before triggering
+  const prevFetchedAt = document.getElementById('last-fetch').textContent;
+
+  const r = await api('POST', '/api/fetch');
+  if (!r) {
+    showToast('❌ Backend not reachable', 'error');
+    btn.classList.remove('loading'); icon.innerHTML = '⟳';
+    return;
+  }
+  showToast('⟳ Fetching live data…', 'warn');
+
+  // Poll until fetched_at changes (new data arrived) — up to 45s
+  let attempts = 0;
+  const poll = setInterval(async () => {
+    attempts++;
+    const d = await api('GET', '/api/live');
+    if (!d) return;
+    const newFetchStr = d.fetched_at
+      ? 'Last fetch: ' + new Date(d.fetched_at).toLocaleTimeString('en-IN')
+      : '';
+    const isNewData = d.data && d.data.length > 0 && newFetchStr !== prevFetchedAt;
+    if (isNewData || attempts >= 22) {
+      clearInterval(poll);
+      if (isNewData) {
+        liveData = d.data;
+        if (d.thresholds) thresholds = { ...thresholds, ...d.thresholds };
+        document.getElementById('last-fetch').textContent = newFetchStr;
+        renderDashboard();
+        loadDemandSummary();
+        await pollAlerts();
+        showToast('✅ ' + d.count + ' meters updated', 'success');
+      } else {
+        showToast('⚠ Fetch timed out — check server log', 'warn');
+      }
+      btn.classList.remove('loading'); icon.innerHTML = '⟳';
+    }
+  }, 2000);
+}
+
+function startAutoRefresh() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  // Poll every 30s to pick up scheduled scrapes without waiting 2min
+  autoRefreshTimer = setInterval(() => refreshLiveData(), 30000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPUTE ROW STATUS (uses thresholds from backend config)
+// ═══════════════════════════════════════════════════════════════
+function computeRow(r) {
+  const vAvg = ((r.Vr||0) + (r.Vy||0) + (r.Vb||0)) / 3;
+  const iMax = Math.max(r.Ir||0, r.Iy||0, r.Ib||0);
+  const isBC = !!(r.IsBusCoupler || (r.Feeder||'').toUpperCase().includes('BUS COUPL'));
+
+  // Backend provides V_status / I_status / LoadPct via /api/live
+  const vStatus = r.V_status || (vAvg > thresholds.ov_limit ? 'OV'
+                               : vAvg < thresholds.uv_limit && vAvg > 1 ? 'UV' : 'OK');
+  // OFF status: only show for non-BC feeders (BC being OFF is its normal state)
+  let iStatus = r.I_status || 'NC';
+  // BC: backend sends 'DIV' when carrying load, 'OK' when idle (never 'OFF')
+  const loadPct = r.LoadPct !== undefined ? r.LoadPct : null;
+
+  return { ...r, Vavg: vAvg, Imax: iMax, vStatus, iStatus, loadPct, isBC };
+}
+
+// ── Lookup feeder master ──────────────────────────────────────
+function lookupMaster(assetCode) {
+  if (!assetCode) return null;
+  const ac = assetCode.trim().toUpperCase();
+  return feederMaster.find(f => (f.AssetCode||'').trim().toUpperCase() === ac) || null;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD RENDER
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const rows = liveData.map(computeRow);
+  populateCircleFilters(rows);
+
+  let tot = rows.length, vok = 0, ol = 0, off = 0, nc = 0, div = 0;
+  const ovGss = new Set(), uvGss = new Set();
+  const ovFdrs = [], uvFdrs = [];
+
+  rows.forEach(r => {
+    const gss = r.Gss || '';
+    if      (r.vStatus === 'OV') { ovGss.add(gss); ovFdrs.push(r); }
+    else if (r.vStatus === 'UV') { uvGss.add(gss); uvFdrs.push(r); }
+    else                          vok++;
+
+    if (r.iStatus === 'OL')            ol++;
+    if (r.iStatus === 'OFF' && !r.isBC) off++;
+    if (r.iStatus === 'DIV' || r.iStatus === 'DIV_PEND' || r.iStatus === 'DIV_RAW') div++;  // BC carrying load (any stage)
+    if (r.iStatus === 'NC')            nc++;
+  });
+
+  const bcFault = rows.filter(r => r.isBC && r.loadPct !== null && r.loadPct > 400).length;
+
+  // ── Update card values ────────────────────────────────
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && el.textContent !== String(val)) {
+      el.textContent = val;
+      // Flash the parent scard on change
+      const card = el.closest('.scard');
+      if (card) {
+        card.classList.remove('flash');
+        void card.offsetWidth; // reflow
+        card.classList.add('flash');
+        setTimeout(() => card.classList.remove('flash'), 500);
+      }
+    }
+  };
+
+  set('sc-total', tot);
+  set('sc-vok',   vok);
+  set('sc-ov',    ovGss.size);
+  set('sc-uv',    uvGss.size);
+  set('sc-ol',    ol);
+  set('sc-off',   off);
+  set('sc-nc',    nc);
+
+  // Sub-labels
+  const ovSub = document.getElementById('sc-ov-sub');
+  const uvSub = document.getElementById('sc-uv-sub');
+  const offSub= document.getElementById('sc-off-sub');
+  if (ovSub)  ovSub.textContent  = ovFdrs.length  ? `${ovFdrs.length} feeder(s) >+6% Vn`  : 'GSS affected';
+  if (uvSub)  uvSub.textContent  = uvFdrs.length  ? `${uvFdrs.length} feeder(s) <-9% Vn`  : 'GSS affected';
+  if (offSub) offSub.textContent = div > 0 ? `+${div} BC diverting` : bcFault > 0 ? `+${bcFault} BC fault` : 'Tripped feeders';
+
+  // ── Alert border highlights ───────────────────────────
+  const cardBorder = (cardId, alertClass, condition) => {
+    const el = document.getElementById(cardId)?.closest?.('.scard');
+    if (!el) return;
+    el.classList.remove('alert-red','alert-yellow','alert-orange');
+    if (condition) el.classList.add(alertClass);
+  };
+  cardBorder('sc-ov',  'alert-red',    ovGss.size > 0);
+  cardBorder('sc-uv',  'alert-yellow', uvGss.size > 0);
+  cardBorder('sc-ol',  'alert-red',    ol > 0);
+  cardBorder('sc-off', 'alert-orange', off > 0 || div > 0 || bcFault > 0);
+  cardBorder('sc-nc',  'alert-orange', nc > 0);
+
+  applyFilters();
+}
+
+function applyFilters() {
+  let rows = liveData.map(computeRow);
+  const circleF = document.getElementById('flt-circle')?.value || '';
+  const divF    = document.getElementById('flt-div')?.value    || '';
+  const search  = document.getElementById('flt-search')?.value.toLowerCase() || '';
+
+  if (circleF) rows = rows.filter(r => r.Circle === circleF);
+  if (divF)    rows = rows.filter(r => r.Division === divF);
+  if (search)  rows = rows.filter(r =>
+    (r.AssetCode||'').toLowerCase().includes(search) ||
+    (r.Feeder||'').toLowerCase().includes(search) ||
+    (r.Gss||'').toLowerCase().includes(search)
+  );
+  if (statusFilter==='violations') rows = rows.filter(r => r.vStatus!=='OK' || r.iStatus==='OL' || r.iStatus==='OFF' || r.iStatus==='DIV' || r.iStatus==='DIV_PEND' || r.iStatus==='DIV_RAW');
+  else if (statusFilter==='ov')   rows = rows.filter(r => r.vStatus==='OV');
+  else if (statusFilter==='uv')   rows = rows.filter(r => r.vStatus==='UV');
+  else if (statusFilter==='ol')   rows = rows.filter(r => r.iStatus==='OL'||r.iStatus==='OFF'||r.iStatus==='DIV'||r.iStatus==='DIV_PEND'||r.iStatus==='DIV_RAW');
+
+  rows.sort((a,b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (va===undefined) va=''; if (vb===undefined) vb='';
+    return typeof va==='string' ? sortDir*va.localeCompare(vb) : sortDir*(va-vb);
+  });
+
+  window._filteredRows = rows;
+  dashPage = 1;
+  renderTablePage();
+}
+
+function renderTablePage() {
+  const rows = window._filteredRows || [];
+  const start = (dashPage-1)*PAGE_SIZE;
+  const page  = rows.slice(start, start+PAGE_SIZE);
+  const tbody = document.getElementById('table-body');
+
+  if (!page.length) {
+    tbody.innerHTML = liveData.length === 0
+      ? '<tr><td colspan="16"><div class="empty-state"><div class="icon">📡</div><div>Click "Fetch Now" to load live data from Probus HES</div></div></td></tr>'
+      : '<tr><td colspan="16"><div class="empty-state"><div class="icon">🔍</div><div>No records match filter</div></div></td></tr>';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = page.map(r => {
+    const vColor = r.vStatus==='OV'?'ov': r.vStatus==='UV'?'uv':'ok';
+    const iColor = r.iStatus==='OL'?'ol': r.iStatus==='OFF'?'ol': r.iStatus==='NC'?'nc'
+                  : r.iStatus==='DIV'?'div': r.iStatus==='DIV_PEND'?'div': r.iStatus==='DIV_RAW'?'div':'ok';
+    const lp = r.loadPct;
+    const lpColor = lp===null?'#4a5a7a': lp>100?'#ff3d71': lp>80?'#ff9100':'#00e676';
+    const barPct  = lp===null?0:Math.min(lp,150);
+    const age = r.ServerTime ? dataAge(r.ServerTime) : '—';
+    const stale = r.ServerTime && isStale(r.ServerTime);
+    const ageBadge = stale
+      ? `<span class="stale-badge">⚠ ${age}</span>`
+      : `<span class="live-badge"><span class="blink"></span>${age}</span>`;
+
+    const iLabel = r.iStatus==='OFF' ? 'OFF'
+                  : r.iStatus==='DIV'      ? '🔀 DIV'
+                  : r.iStatus==='DIV_PEND' ? '⏳ DIV?'
+                  : r.iStatus==='DIV_RAW'  ? '⚠ BC Live'
+                  : r.iStatus;
+
+    return `<tr>
+      <td class="td-mono">${r.AssetCode||'—'}</td>
+      <td>${r.Circle||'—'}</td>
+      <td>${r.Division||'—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Gss||''}">${r.Gss||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.Feeder||''}">${r.Feeder||'—'}</td>
+      <td><span class="pill ${r.FeederType==='Priority'?'pill-P':'pill-NP'}">${r.FeederType==='Priority'?'P':'NP'}</span></td>
+      <td class="td-mono">${r.Vavg.toFixed(3)}</td>
+      <td class="td-mono">${(r.Vr||0).toFixed(3)}</td>
+      <td class="td-mono">${(r.Vy||0).toFixed(3)}</td>
+      <td class="td-mono">${(r.Vb||0).toFixed(3)}</td>
+      <td class="td-mono">${r.Imax.toFixed(2)}</td>
+      <td>${lp!==null
+        ? `<span class="td-mono" style="color:${lpColor}">${lp.toFixed(1)}%</span>
+           <span class="pct-bar"><span class="pct-fill" style="width:${barPct/1.5}%;background:${lpColor}"></span></span>`
+        : '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="td-mono">${(r.ApparentPower||0).toFixed(3)}</td>
+      <td><span class="pill pill-${vColor}">${r.vStatus}</span></td>
+      <td><span class="pill pill-${iColor}">${iLabel}</span></td>
+      <td>${ageBadge}</td>
+    </tr>`;
+  }).join('');
+
+  const total = rows.length, pages = Math.ceil(total/PAGE_SIZE);
+  let pg = `<span class="page-info">${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>`;
+  if (pages>1) {
+    if (dashPage>1) pg+=`<button class="page-btn" onclick="dashPage--;renderTablePage()">◀</button>`;
+    for (let i=Math.max(1,dashPage-2);i<=Math.min(pages,dashPage+2);i++)
+      pg+=`<button class="page-btn${i===dashPage?' active':''}" onclick="dashPage=${i};renderTablePage()">${i}</button>`;
+    if (dashPage<pages) pg+=`<button class="page-btn" onclick="dashPage++;renderTablePage()">▶</button>`;
+  }
+  document.getElementById('pagination').innerHTML = pg;
+}
+
+function dataAge(t) {
+  try {
+    const diff = Math.floor((Date.now()-new Date(t))/1000);
+    if (diff<60) return diff+'s ago';
+    if (diff<3600) return Math.floor(diff/60)+'m ago';
+    return Math.floor(diff/3600)+'h ago';
+  } catch { return '—'; }
+}
+function isStale(t) { try { return (Date.now()-new Date(t))>3600000; } catch{return false;} }
+
+function setStatusFilter(f) {
+  statusFilter = f;
+  ['all','viol','ov','uv','ol'].forEach(k=>document.getElementById('bdg-'+k)?.classList.remove('active'));
+  document.getElementById('bdg-'+f)?.classList.add('active');
+  applyFilters();
+}
+function sortTable(key) {
+  if (sortKey===key) sortDir=-sortDir; else {sortKey=key;sortDir=1;}
+  applyFilters();
+}
+
+function populateCircleFilters(rows) {
+  const data = rows || liveData.map(computeRow);
+  const circles = [...new Set(data.map(r=>r.Circle).filter(Boolean))].sort();
+  const cSel = document.getElementById('flt-circle');
+  const val  = cSel?.value;
+  if (cSel) cSel.innerHTML = '<option value="">All Circles</option>'+circles.map(c=>`<option${c===val?' selected':''}>${c}</option>`).join('');
+  updateDivFilter();
+}
+function updateDivFilter() {
+  const circ = document.getElementById('flt-circle')?.value;
+  const divs = [...new Set(liveData.filter(r=>!circ||r.Circle===circ).map(r=>r.Division).filter(Boolean))].sort();
+  const dSel = document.getElementById('flt-div');
+  if (dSel) dSel.innerHTML = '<option value="">All Divisions</option>'+divs.map(d=>`<option>${d}</option>`).join('');
+}
+function populateMasterCircleFilter() {
+  const mSel = document.getElementById('master-circle-flt');
+  if (!mSel) return;
+  const mc  = [...new Set(feederMaster.map(f=>f.CircleName).filter(Boolean))].sort();
+  const mv  = mSel.value;
+  mSel.innerHTML = '<option value="">All Circles</option>'+mc.map(c=>`<option${c===mv?' selected':''}>${c}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERT LOG — from backend
+// ═══════════════════════════════════════════════════════════════
+let alertFilter = 'all';
+
+function setAlertFilter(f) {
+  alertFilter = f;
+  ['all','active','OV','UV','OL','FEEDER_OFF','LOAD_DIVERTED'].forEach(k => {
+    const key = k === 'FEEDER_OFF' ? 'off' : k === 'LOAD_DIVERTED' ? 'div' : k.toLowerCase();
+    document.getElementById('af-'+key)?.classList.toggle('active', k === f);
+  });
+  renderAlerts();
+}
+
+function fmtDuration(seconds) {
+  if (!seconds && seconds !== 0) return '';
+  const s = Math.floor(seconds);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), ss = s%60;
+  if (h) return `${h}h ${m}m`;
+  if (m) return `${m}m ${ss}s`;
+  return `${ss}s`;
+}
+
+function activeSince(firstSeen) {
+  if (!firstSeen) return '';
+  const diff = Math.floor((Date.now() - new Date(firstSeen)) / 1000);
+  return fmtDuration(diff);
+}
+
+function renderAlerts() {
+  const el = document.getElementById('alert-list');
+  let data = alertLog;
+  // Filter rules using is_latched (= type is checked in UI = latched/stateful):
+  //   Latched+acked: stay visible while is_active, hide once cleared
+  //   Non-latched+acked: disappear immediately on ack
+  //   BC alerts: always disappear on ack
+  // Types that show "Active Since" badge and stay visible while active
+  // Must match email.alert_types checkboxes in Notifications tab
+  const LATCHED_TYPES = ['OV','UV','OL','FEEDER_OFF','LOAD_DIVERTED','PT_PHASE_MISSING','LINE_JUMPER_PARTING'];
+
+  // Exclude SLD/SLR from main alert log (they go to Load Events tab)
+  const SLD_SLR = ['SUDDEN_LOAD_DROP','SUDDEN_LOAD_RAISE','BC_LOADING_START'];
+
+  // SCADA-style: every event (trip/restore) shows as its own row in time order.
+  // Active alerts ALWAYS show regardless of acked state — acking means
+  // "operator has seen it", NOT "resolved". Only cleared+acked history is
+  // hidden, and only after the operator explicitly presses "Acknowledge All".
+  const _userAckedAll = window._alertUserAckedAll || false;
+
+  const filterFn = a => {
+    if (SLD_SLR.includes(a.type))         return false;  // Load Events tab only
+    // Active alerts (still happening in the field) ALWAYS show, acked or not
+    if (a.is_active)                       return true;
+    // Cleared events: show if not yet acked (pending operator awareness)
+    if (!a.acked)                          return true;
+    // Cleared+acked: hide ONLY after operator pressed "Acknowledge All"
+    if (_userAckedAll)                     return false;
+    return true;  // SCADA-style — show trip/restore history by default
+  };
+  if (alertFilter === 'all') {
+    data = alertLog.filter(filterFn);
+  } else if (alertFilter === 'active') {
+    data = alertLog.filter(a => filterFn(a) && a.is_active);
+  } else {
+    data = alertLog.filter(a => filterFn(a) && a.type === alertFilter);
+  }
+
+  const activeCount = alertLog.filter(a => a.is_active && filterFn(a)).length;
+  const countEl = document.getElementById('alert-active-count');
+  if (countEl) countEl.textContent = `(${activeCount} active unacked)`;
+
+  if (!data.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">✅</div><div>No violations in current filter</div></div>';
+    return;
+  }
+
+  const ICONS  = {OV:'🔴',UV:'🟡',OL:'🟠',FEEDER_OFF:'⚫',
+                  SUDDEN_LOAD_DROP:'📉',SUDDEN_LOAD_RAISE:'📈',
+                  LOAD_DIVERTED:'🔀',LOAD_RESTORED:'✅',
+                  PT_PHASE_MISSING:'⚠️',LINE_JUMPER_PARTING:'⛓️'};
+  const LABELS = {OV:'Over Voltage',UV:'Under Voltage',OL:'Overload',
+                  FEEDER_OFF:'Feeder OFF',SUDDEN_LOAD_DROP:'Sudden Load Drop',
+                  SUDDEN_LOAD_RAISE:'Sudden Load Raise',
+                  LOAD_DIVERTED:'Load Diverted via BC',LOAD_RESTORED:'Load Restored',
+                  PT_PHASE_MISSING:'PT Phase Missing',LINE_JUMPER_PARTING:'Line Jumper Parting'};
+  // STATEFUL used for 'Active Since' badge display
+
+  el.innerHTML = data.map(a => {
+    const icon    = ICONS[a.type]  || '⚠';
+    const label   = LABELS[a.type] || a.type;
+    const isActive= a.is_active;
+    const isStateful = LATCHED_TYPES.includes(a.type);
+    const cls     = (!isActive) ? ' alert-acked' : '';
+    const isGSS   = a.FeederType === 'GSS';  // GSS-level OV/UV alert
+
+    // OL level badge — shown on the alert title row
+    let olLevelBadge = '';
+    if (a.type === 'OL' && isActive) {
+      const lvl = a.ol_level || 1;
+      const lvlCfg = {
+        1: {label:'L1 ≥100%', bg:'rgba(255,145,0,0.2)', color:'var(--orange)'},
+        2: {label:'L2 ≥110%', bg:'rgba(255,100,0,0.25)', color:'#ff7722'},
+        3: {label:'L3 ≥120%', bg:'rgba(255,40,40,0.25)', color:'var(--red)'},
+      }[lvl] || {label:'OL', bg:'rgba(255,145,0,0.2)', color:'var(--orange)'};
+      olLevelBadge = `<span style="background:${lvlCfg.bg};color:${lvlCfg.color};
+        border-radius:3px;padding:2px 8px;font-size:10px;font-weight:700;margin-left:6px">
+        ${lvl > 1 ? '⚠ ' : ''}${lvlCfg.label}</span>`;
+    }
+
+    // Active since / duration badge
+    let timeBadge;
+    if (isActive && isStateful) {
+      const since = activeSince(a.first_seen || a.timestamp);
+      timeBadge = `<span style="background:rgba(255,61,113,0.15);color:var(--red);
+        border-radius:3px;padding:2px 7px;font-size:10px;font-weight:600">
+        🔴 ACTIVE ${since}</span>`;
+    } else if (!isActive && a.duration_s) {
+      timeBadge = `<span style="background:rgba(0,230,118,0.1);color:var(--green);
+        border-radius:3px;padding:2px 7px;font-size:10px;font-weight:600">
+        ✅ Cleared after ${fmtDuration(a.duration_s)}</span>`;
+    } else {
+      timeBadge = '';
+    }
+
+    const emailSent = a.notified_email ? '📧' : '';
+    const waSent    = a.notified_wa    ? '📱' : '';
+
+    // GSS-level alert: show affected feeders as a table
+    let feederDrillDown = '';
+    if (isGSS && a.affected_feeders) {
+      const feeders = Array.isArray(a.affected_feeders)
+        ? a.affected_feeders
+        : (typeof a.affected_feeders === 'string'
+            ? JSON.parse(a.affected_feeders) : []);
+      if (feeders.length) {
+        const rows = feeders.map(f =>
+          `<tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:4px 8px;font-family:var(--font-mono);font-size:11px;color:var(--accent)">${f.AssetCode||''}</td>
+            <td style="padding:4px 8px;font-size:11px">${f.Feeder||''}</td>
+            <td style="padding:4px 8px;font-family:var(--font-mono);font-size:11px;
+              color:${a.type==='OV'?'var(--red)':'var(--yellow)'};font-weight:600">${(f.Vavg||0).toFixed(3)} kV</td>
+            <td style="padding:4px 8px;font-family:var(--font-mono);font-size:11px">
+              ${(f.Vr||0).toFixed(3)} / ${(f.Vy||0).toFixed(3)} / ${(f.Vb||0).toFixed(3)}</td>
+            <td style="padding:4px 8px;font-size:10px">
+              <span class="pill ${f.FeederType==='Priority'?'pill-P':'pill-NP'}">${f.FeederType==='Priority'?'P':'NP'}</span>
+            </td>
+          </tr>`).join('');
+        feederDrillDown = `
+          <div style="margin-top:8px;background:var(--bg3);border-radius:5px;overflow:hidden">
+            <div style="padding:5px 8px;font-size:10px;color:var(--text3);background:var(--bg2);
+              border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px">
+              Affected Feeders (${feeders.length})
+            </div>
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr style="background:var(--panel2)">
+                <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3)">Meter ID</th>
+                <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3)">Feeder</th>
+                <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3)">V avg</th>
+                <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3)">Vr / Vy / Vb</th>
+                <th style="padding:4px 8px;text-align:left;font-size:10px;color:var(--text3)">Type</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`;
+      }
+    }
+
+    // Title line: GSS alerts show GSS name, feeder alerts show feeder name
+    // Compact title: avoid repeating GSS in both title and meta line
+    const titleText = isGSS
+      ? `${a.Gss} — ${label}`
+      : `${a.Feeder || a.AssetCode} — ${label}`;
+    // Meta line: show only non-redundant info
+    const metaLine = isGSS
+      ? `${a.Circle} / ${a.Division}`
+      : `<span style="color:var(--accent);font-family:var(--font-mono)">${a.AssetCode}</span> | ${a.Circle} / ${a.Division} | <span style="color:var(--text2)">${a.Gss}</span>`;
+
+    const safeId = a.id.replace(/'/g,"&apos;").replace(/"/g,"&quot;");
+    const ackBtn = isActive && !a.acked
+      ? `<button class="btn ghost sm" onclick="ackAlert(this)" data-id="${safeId}" style="white-space:nowrap">✓ Ack</button>`
+      : `<span style="font-size:10px;color:var(--text3)">${!isActive ? '✓ Cleared' : '✓ Acked'}</span>`;
+
+    // Field-level diversion marking — only offered on active FEEDER_OFF
+    // alerts. Automatic BC-based diversion (LOAD_DIVERTED alerts) always
+    // takes priority — this button is for cases the automatic detector
+    // cannot see (diversion outside the monitored Bus Coupler path).
+    // Toggles between "Mark Diverted" and "Unmark" based on current
+    // server-reported state (_fieldMark, merged in pollAlerts()). Auto-
+    // clears on its own once the feeder restores (handled server-side),
+    // so this button never goes stale beyond one poll interval.
+    let fieldDivBtn = '';
+    if (isActive && a.type === 'FEEDER_OFF') {
+      if (a._fieldMark) {
+        const fm = a._fieldMark;
+        const srcName = (fm.source_feeder_name||'').replace(/'/g,"&apos;");
+        const srcGss  = (fm.source_gss_name||'').replace(/'/g,"&apos;");
+        fieldDivBtn = `<button class="btn ghost sm" style="white-space:nowrap;color:#9b59b6;border-color:#9b59b6"
+          onclick="openUnmarkFieldDiversion('${safeId}')"
+          title="Diverted via ${srcName} @ ${srcGss}">🔀 Unmark (Field)</button>`;
+      } else {
+        const acSafe  = (a.AssetCode||'').replace(/'/g,"&apos;");
+        const fdrSafe = (a.Feeder||'').replace(/'/g,"&apos;");
+        const gssSafe = (a.Gss||'').replace(/'/g,"&apos;");
+        fieldDivBtn = `<button class="btn ghost sm" style="white-space:nowrap"
+          onclick="openMarkFieldDiversion('${safeId}','${acSafe}','${fdrSafe}','${gssSafe}')">🔀 Mark Diverted</button>`;
+      }
+    }
+
+    // Safety-net "Force Clear" button — appears on ANY alert that's been
+    // active for an unusually long time (>6h), regardless of type. Covers
+    // cases where automatic clearing logic hasn't caught a specific edge
+    // case yet (e.g. a code-version mismatch during rollout, or a data
+    // gap the auto-clear path didn't anticipate) — gives a direct manual
+    // recovery path instead of waiting on a code fix to propagate.
+    let forceClearBtn = '';
+    if (isActive) {
+      const activeMs = Date.now() - new Date(a.first_seen || a.timestamp).getTime();
+      const sixHoursMs = 6 * 60 * 60 * 1000;
+      if (activeMs > sixHoursMs) {
+        forceClearBtn = `<button class="btn ghost sm" style="white-space:nowrap;color:var(--orange);border-color:var(--orange)"
+          onclick="forceClearAlert('${safeId}')"
+          title="This alert has been active unusually long — use if you've confirmed in the field that the condition no longer applies">
+          ⚠ Force Clear</button>`;
+      }
+    }
+
+    // Compact single-row card
+    return `<div class="alert-item${cls}" id="alert-${a.id}">
+      <div style="font-size:22px;flex-shrink:0;width:28px;text-align:center">${icon}</div>
+      <div style="flex:1;min-width:0">
+
+        <!-- Row 1: Title + badge + ack -->
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:${
+            a.type==='OV'?'var(--red)':a.type==='UV'?'var(--yellow)':
+            a.type==='OL'?'var(--orange)':a.type==='FEEDER_OFF'?'#aaa':
+            a.type==='LOAD_DIVERTED'?'#f783ac':'var(--text)'}">${titleText}</span>
+          ${olLevelBadge}
+          ${timeBadge}
+          <span style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span style="font-size:10px;color:var(--text3)">${emailSent}${waSent}</span>
+            ${fieldDivBtn}
+            ${forceClearBtn}
+            ${ackBtn}
+          </span>
+        </div>
+
+        <!-- Row 2: Location -->
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">
+          ${isGSS
+            ? `${a.Circle} / ${a.Division}`
+            : `<span style="color:var(--accent);font-family:var(--font-mono)">${a.AssetCode}</span> &nbsp;·&nbsp; ${a.Circle} / ${a.Division} &nbsp;·&nbsp; ${a.Gss}`}
+          &nbsp;·&nbsp; <span style="color:var(--text3)">${new Date(a.first_seen||a.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',hour12:true})}</span>
+        </div>
+
+        <!-- Row 3: Detail (condensed) -->
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${a.detail||''}</div>
+
+        ${a._fieldMark ? `<div style="font-size:11px;color:#9b59b6;margin-top:4px">
+          🔀 Load diverted via field device — ${a._fieldMark.source_feeder_name||a._fieldMark.source_asset_code}
+          @ ${a._fieldMark.source_gss_name||''} <i>(Field Marked${a._fieldMark.marked_by ? ' by '+a._fieldMark.marked_by : ''})</i>
+          ${a._fieldMark.diversion_time ? `<br>Diverted since: ${new Date(a._fieldMark.diversion_time).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})}` : ''}
+          ${a._fieldMark.note ? `<br><span style="color:var(--text3)">Note: ${a._fieldMark.note}</span>` : ''}
+        </div>` : ''}
+
+        <!-- Row 4: Electrical readings (compact, only if non-GSS) -->
+        ${!isGSS && (a.Vr||a.Ir) ? `<div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--font-mono)">
+          V: ${(a.Vr||0).toFixed(2)}/${(a.Vy||0).toFixed(2)}/${(a.Vb||0).toFixed(2)} kV
+          &nbsp;I: ${(a.Ir||0).toFixed(1)}/${(a.Iy||0).toFixed(1)}/${(a.Ib||0).toFixed(1)} A
+          ${a.FeederRating ? `&nbsp;Rating: ${a.FeederRating}A` : ''}
+        </div>` : ''}
+
+        <!-- GSS feeder drill-down -->
+        ${feederDrillDown}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function ackAlert(el) {
+  // el can be button element (from onclick) or a string id
+  const id = typeof el === 'string' ? el : (el.dataset?.id || el);
+  if (!id) return;
+  await api('POST', `/api/alerts/${id}/ack`);
+  await pollAlerts();
+}
+
+async function ackLoadEvent(el) {
+  const id = typeof el === 'string' ? el : (el.dataset?.id || el);
+  if (!id) return;
+  await api('POST', `/api/alerts/${id}/ack`);
+  // Mark as acked locally immediately (no flicker)
+  const ev = loadEventLog.find(a => a.id === id);
+  if (ev) ev.acked = true;
+  renderLoadEvents();
+  // Then sync with server
+  await pollLoadEvents();
+}
+async function ackAllAlerts() {
+  // Set SCADA-style flag: hide all cleared+acked history from the list
+  window._alertUserAckedAll = true;
+  await api('POST', '/api/alerts/ack-all');
+  await pollAlerts();
+  showToast('✅ Acknowledged — cleared history hidden', 'success');
+}
+
+function resetAckAllFlag() {
+  // Called when new alerts arrive — show history again for new events
+  // Only reset if there are new unacked events
+  window._alertUserAckedAll = false;
+}
+async function cleanupStaleAlerts() {
+  const r = await api('POST', '/api/alerts/cleanup-stale');
+  if (r?.ok) {
+    const n = r.deactivated || 0;
+    showToast(n > 0
+      ? `✅ Deactivated ${n} stale alert(s) with old GSS names`
+      : '✅ No stale alerts found', 'success');
+    if (n > 0) await pollAlerts();
+  } else {
+    showToast('❌ Cleanup failed', 'error');
+  }
+}
+
+async function clearAlerts() {
+  if (!confirm('Purge resolved alerts older than 90 days?\nRecent history will be preserved for export.')) return;
+  await api('POST', '/api/alerts/clear');
+  await pollAlerts();
+}
+
+function toggleExportPanel() {
+  const panel = document.getElementById('export-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) initExportPanel();
+}
+
+function initExportPanel() {
+  // Set default dates: last 7 days
+  const today = new Date();
+  const week  = new Date(today - 7*24*3600*1000);
+  document.getElementById('export-start').value = week.toISOString().slice(0,10);
+  document.getElementById('export-end').value   = today.toISOString().slice(0,10);
+  // Render type checkboxes
+  const el = document.getElementById('export-type-checks');
+  if (el && !el.children.length) {
+    el.innerHTML = EVENT_TYPES.map(e => `
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;
+        background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 8px">
+        <input type="checkbox" id="exp-${e.id}" checked
+          style="accent-color:var(--accent)">
+        <span style="color:${e.color}">${e.icon}</span>
+        <span style="color:var(--text2)">${e.label}</span>
+      </label>`).join('');
+  }
+}
+
+function doExport(fmt) {
+  const start = document.getElementById('export-start').value;
+  const end   = document.getElementById('export-end').value;
+  if (!start || !end) { showToast('Select date range first', 'error'); return; }
+  const types = EVENT_TYPES
+    .filter(e => document.getElementById('exp-'+e.id)?.checked)
+    .map(e => e.id).join(',');
+  const url = `${BACKEND}/api/alerts/export?start=${start}&end=${end}&types=${types}&fmt=${fmt}`;
+  window.open(url, '_blank');
+  showToast(`⬇ Downloading ${fmt.toUpperCase()} (${start} to ${end})`, 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FEEDER MASTER — CRUD via backend
+// ═══════════════════════════════════════════════════════════════
+function renderMasterTable() {
+  const search  = document.getElementById('master-search')?.value.toLowerCase() || '';
+  const circleF = document.getElementById('master-circle-flt')?.value || '';
+  const liveAssets = new Set(liveData.map(r=>(r.AssetCode||'').toUpperCase()));
+
+  let rows = feederMaster.filter(f => {
+    if (circleF && f.CircleName !== circleF) return false;
+    if (search) return (f.AssetCode||'').toLowerCase().includes(search) ||
+      (f.FeederName||'').toLowerCase().includes(search) ||
+      (f.GssName||'').toLowerCase().includes(search) ||
+      (f.FeederCode||'').toLowerCase().includes(search);
+    return true;
+  });
+
+  const total = rows.length, start=(masterPage-1)*PAGE_SIZE;
+  const page  = rows.slice(start,start+PAGE_SIZE);
+  const tbody = document.getElementById('master-tbody');
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="padding:20px;color:var(--text3);text-align:center">
+      ${feederMaster.length===0
+        ? 'No feeders configured. Click "Import from Live Data" to auto-import, then set ratings.'
+        : 'No records match filter'}</td></tr>`;
+  } else {
+    tbody.innerHTML = page.map((f,i) => {
+      const globalIdx = feederMaster.indexOf(f);
+      const linked = f.AssetCode && liveAssets.has(f.AssetCode.toUpperCase());
+      const hasId  = !!f.AssetCode;
+      return `<tr>
+        <td class="td-mono" style="color:${hasId?'var(--accent)':'var(--red)'}">
+          ${hasId ? f.AssetCode : '<i style="color:var(--text3)">Not set</i>'}
+        </td>
+        <td>${f.CircleName||'—'}</td>
+        <td>${f.DivisionName||'—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:11px">${f.GssName||'—'}</td>
+        <td>${f.FeederName||'—'}${f.IsSolarPlant
+          ? '<span style="background:rgba(255,215,64,0.15);color:#ffd740;border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px" title="Solar Plant — uses delayed/tightened OFF detection (0A is normal during low-sun)">SOLAR</span>'
+          : ''}</td>
+        <td class="td-mono">${f.FeederRating||'?'} A</td>
+        <td class="td-mono">${f.VoltageRating||33} kV</td>
+        <td><span class="pill ${f.FeederType==='Priority'?'pill-P':'pill-NP'}">${f.FeederType==='Priority'?'P':'NP'}</span></td>
+        <td style="text-align:center;font-size:12px">${
+          f.PowerSign==='-' ? '<span style="color:var(--orange);font-weight:700" title="Reverse CT — MW sign negated">−CT</span>' :
+          f.PowerSign==='solar' ? '<span style="color:#ffd740;font-weight:700" title="Solar generation feeder">☀</span>' :
+          '<span style="color:var(--text3)">—</span>'
+        }</td>
+        <td>${hasId
+          ? (linked
+            ? '<span class="live-badge"><span class="blink"></span>Live</span>'
+            : '<span style="color:var(--yellow);font-size:11px">⚠ No match in live data</span>')
+          : '<span style="color:var(--text3);font-size:11px">No AssetCode</span>'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn sm ghost" onclick="openEditModal(${globalIdx})">✎ Edit</button>
+          <button class="btn sm danger" onclick="deleteFeeder(${globalIdx})" style="margin-left:4px">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  const pages = Math.ceil(total/PAGE_SIZE);
+  let pg = `<span class="page-info">${start+1}–${Math.min(start+PAGE_SIZE,total)} of ${total}</span>`;
+  if (pages>1) {
+    if (masterPage>1) pg+=`<button class="page-btn" onclick="masterPage--;renderMasterTable()">◀</button>`;
+    for (let i=Math.max(1,masterPage-2);i<=Math.min(pages,masterPage+2);i++)
+      pg+=`<button class="page-btn${i===masterPage?' active':''}" onclick="masterPage=${i};renderMasterTable()">${i}</button>`;
+    if (masterPage<pages) pg+=`<button class="page-btn" onclick="masterPage++;renderMasterTable()">▶</button>`;
+  }
+  document.getElementById('master-pagination').innerHTML = pg;
+}
+
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Add Feeder';
+  document.getElementById('modal-edit-idx').value = '';
+  ['m-asset','m-division','m-gss','m-feeder','m-fcode'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-rating').value = '';
+  document.getElementById('m-vn').value = '33';
+  document.getElementById('m-sign').value = '';
+  document.getElementById('m-solar').checked = false;
+  document.getElementById('feeder-modal').classList.add('open');
+}
+function openEditModal(idx) {
+  const f = feederMaster[idx];
+  if (!f) return;
+  document.getElementById('modal-title').textContent = 'Edit Feeder';
+  document.getElementById('modal-edit-idx').value = idx;
+  document.getElementById('m-asset').value    = f.AssetCode    || '';
+  document.getElementById('m-circle').value   = f.CircleName   || 'BALASORE';
+  document.getElementById('m-division').value = f.DivisionName || '';
+  document.getElementById('m-gss').value      = f.GssName      || '';
+  document.getElementById('m-feeder').value   = f.FeederName   || '';
+  document.getElementById('m-rating').value   = f.FeederRating || '';
+  document.getElementById('m-vn').value       = f.VoltageRating|| 33;
+  document.getElementById('m-type').value     = f.FeederType   || 'Priority';
+  document.getElementById('m-sign').value     = f.PowerSign    || '';
+  document.getElementById('m-fcode').value    = f.FeederCode   || '';
+  document.getElementById('m-solar').checked  = !!f.IsSolarPlant;
+  document.getElementById('feeder-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('feeder-modal').classList.remove('open'); }
+
+// ── Field-Level Diversion Marking ──────────────────────────────────────────
+let _fieldDivOptions = [];   // cached GSS/Feeder picker options
+let _fieldDivOptionsLoaded = false;
+
+async function _ensureFieldDivOptionsLoaded() {
+  if (_fieldDivOptionsLoaded) return;
+  const r = await api('GET', '/api/field-diversion/options');
+  if (r?.ok) {
+    _fieldDivOptions = r.options || [];
+    _fieldDivOptionsLoaded = true;
+  }
+}
+
+function filterFieldDiversionOptions() {
+  const q = document.getElementById('fd-source-search').value.trim().toLowerCase();
+  const sel = document.getElementById('fd-source-select');
+  const matches = q
+    ? _fieldDivOptions.filter(o =>
+        (o.feeder_name||'').toLowerCase().includes(q) ||
+        (o.gss_name||'').toLowerCase().includes(q) ||
+        (o.asset_code||'').toLowerCase().includes(q))
+    : _fieldDivOptions.slice(0, 50);  // show first 50 by default, avoid a huge unfiltered list
+  sel.innerHTML = matches.map(o =>
+    `<option value="${o.asset_code}" data-feeder="${(o.feeder_name||'').replace(/"/g,'&quot;')}" data-gss="${(o.gss_name||'').replace(/"/g,'&quot;')}">
+      ${o.feeder_name} — ${o.gss_name} (${o.circle_name})
+    </option>`
+  ).join('');
+}
+
+function onFieldDiversionSourceSelected() {
+  // No-op for now — selection is read directly from the <select> at submit
+  // time. Kept as a hook in case we want live preview/validation later.
+}
+
+async function openMarkFieldDiversion(alertId, assetCode, feederName, gssName) {
+  document.getElementById('fd-alert-id').value   = alertId;
+  document.getElementById('fd-asset-code').value = assetCode;
+  document.getElementById('fd-off-feeder-display').value = `${feederName} @ ${gssName}`;
+  document.getElementById('fd-source-search').value = '';
+  document.getElementById('fd-note').value = '';
+  document.getElementById('fd-marked-by').value = localStorage.getItem('tpnodl_operator_name') || '';
+  // Default to "now" in the operator's local time, formatted for the
+  // datetime-local input (YYYY-MM-DDTHH:MM) — editable, since the
+  // operator may need to enter when the diversion actually happened,
+  // which could be well before this marking action.
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('fd-diversion-time').value = now.toISOString().slice(0,16);
+  await _ensureFieldDivOptionsLoaded();
+  filterFieldDiversionOptions();  // populate with default first-50 list
+  document.getElementById('field-div-modal').classList.add('open');
+}
+
+function closeFieldDivModal() {
+  document.getElementById('field-div-modal').classList.remove('open');
+}
+
+// ── Weather Station Configuration ──────────────────────────────────────────
+let _weatherStations = [];
+
+const TPNODL_CIRCLES = ['Balasore','Baripada','Bhadrak','Jajpur','Keonjhar'];
+
+async function openWeatherStationModal() {
+  const r = await api('GET', '/api/weather/sites');
+  _weatherStations = (r?.ok && r.sites) ? r.sites : [];
+  renderWeatherStationTable();
+  renderWeatherCoverageMap();
+  document.getElementById('weather-station-modal').classList.add('open');
+}
+
+function closeWeatherStationModal() {
+  document.getElementById('weather-station-modal').classList.remove('open');
+}
+
+function renderWeatherStationTable() {
+  const tbody = document.getElementById('ws-table-body');
+  tbody.innerHTML = _weatherStations.map((s, i) => `
+    <tr style="border-bottom:1px solid var(--border)" data-idx="${i}">
+      <td style="padding:6px 4px">
+        <input type="checkbox" ${s.active ? 'checked' : ''} onchange="_wsUpdate(${i},'active',this.checked)">
+      </td>
+      <td style="padding:6px 4px">
+        <input type="text" value="${s.site_id||''}" style="width:90px" onchange="_wsUpdate(${i},'site_id',this.value)" placeholder="1004_01">
+      </td>
+      <td style="padding:6px 4px">
+        <input type="text" value="${(s.display_name||'').replace(/"/g,'&quot;')}" style="width:140px" onchange="_wsUpdate(${i},'display_name',this.value)" placeholder="Kalimandir PSS">
+      </td>
+      <td style="padding:6px 4px">
+        <input type="text" value="${(s.location||'').replace(/"/g,'&quot;')}" style="width:160px" onchange="_wsUpdate(${i},'location',this.value)" placeholder="Balasore (Kalimandir)">
+      </td>
+      <td style="padding:6px 4px">
+        <select onchange="_wsUpdate(${i},'circle',this.value)" style="width:120px">
+          <option value="">— Select —</option>
+          ${TPNODL_CIRCLES.map(c => `<option value="${c}" ${s.circle===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:6px 4px">
+        <input type="number" step="0.1" value="${s.weight ?? 1.0}" style="width:55px" onchange="_wsUpdate(${i},'weight',parseFloat(this.value)||1.0)">
+      </td>
+      <td style="padding:6px 4px">
+        <button class="btn ghost sm" onclick="testWeatherStation(${i})">🔍 Test</button>
+      </td>
+      <td style="padding:6px 4px">
+        <button class="btn ghost sm" style="color:var(--red);border-color:var(--red)" onclick="removeWeatherStationRow(${i})">🗑</button>
+      </td>
+    </tr>
+    <tr id="ws-test-result-${i}" style="display:none"><td colspan="8" style="padding:2px 4px 8px 4px;font-size:11px"></td></tr>
+  `).join('');
+}
+
+function _wsUpdate(idx, field, value) {
+  if (_weatherStations[idx]) {
+    _weatherStations[idx][field] = value;
+    if (field === 'circle') renderWeatherCoverageMap();
+  }
+}
+
+function addWeatherStationRow() {
+  _weatherStations.push({
+    site_id: '', sheet_name: '', display_name: '', location: '',
+    circle: '', weight: 1.0, active: true,
+  });
+  renderWeatherStationTable();
+}
+
+function removeWeatherStationRow(idx) {
+  if (!confirm('Remove this weather station?')) return;
+  _weatherStations.splice(idx, 1);
+  renderWeatherStationTable();
+  renderWeatherCoverageMap();
+}
+
+async function testWeatherStation(idx) {
+  const s = _weatherStations[idx];
+  const resultRow = document.getElementById(`ws-test-result-${idx}`);
+  const resultCell = resultRow.querySelector('td');
+  resultRow.style.display = '';
+  resultCell.style.color = 'var(--text3)';
+  resultCell.textContent = `⏳ Testing ${s.site_id || '(no site ID)'}...`;
+
+  if (!s.site_id) {
+    resultCell.style.color = 'var(--red)';
+    resultCell.textContent = '❌ Enter a Site ID first';
+    return;
+  }
+
+  const r = await api('POST', '/api/weather/sites/test', { site_id: s.site_id });
+  if (r?.ok) {
+    const lb = r.latest_block || {};
+    resultCell.style.color = 'var(--green)';
+    resultCell.textContent = `✅ OK — ${r.blocks_returned} blocks today. Latest: `
+      + `${lb.avgAT ?? '?'}°C, ${lb.avgRH ?? '?'}% RH, `
+      + `${lb.maxWS ? (lb.maxWS*3.6).toFixed(1) : '?'} km/h wind`;
+  } else {
+    resultCell.style.color = 'var(--red)';
+    resultCell.textContent = `❌ ${r?.error || 'Test failed — check Site ID'}`;
+  }
+}
+
+function renderWeatherCoverageMap() {
+  const map = document.getElementById('ws-coverage-map');
+  map.innerHTML = TPNODL_CIRCLES.map(circle => {
+    const stations = _weatherStations.filter(s => s.circle === circle && s.active);
+    const hasStation = stations.length > 0;
+    return `
+      <div style="border:1px solid ${hasStation ? 'var(--accent)' : 'var(--border)'};
+        border-radius:8px;padding:10px 14px;min-width:120px;text-align:center">
+        <div style="font-weight:600;color:${hasStation ? 'var(--accent)' : 'var(--text3)'}">${circle}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">
+          ${hasStation ? stations.map(s => s.display_name || s.site_id).join(', ') : '⚠ No station'}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function saveWeatherStations() {
+  // Basic validation: every active row needs a site_id and circle
+  for (const s of _weatherStations) {
+    if (s.active && (!s.site_id || !s.circle)) {
+      showToast('⚠ Every active station needs a Site ID and a Representative Circle', 'warn');
+      return;
+    }
+  }
+  const r = await api('POST', '/api/weather/sites', { sites: _weatherStations });
+  if (r?.ok) {
+    showToast(`✅ Saved ${r.count} weather station(s)`, 'success');
+  } else {
+    showToast(`❌ ${r?.error || 'Save failed'}`, 'error');
+  }
+}
+
+async function submitFieldDiversionMark() {
+  const alertId   = document.getElementById('fd-alert-id').value;
+  const assetCode = document.getElementById('fd-asset-code').value;
+  const sel       = document.getElementById('fd-source-select');
+  const opt       = sel.options[sel.selectedIndex];
+
+  if (!opt) {
+    showToast('⚠ Please select a source GSS & Feeder from the list', 'warn');
+    return;
+  }
+
+  const sourceAssetCode  = opt.value;
+  const sourceFeederName = opt.dataset.feeder || '';
+  const sourceGssName    = opt.dataset.gss || '';
+  const note      = document.getElementById('fd-note').value.trim();
+  const markedBy  = document.getElementById('fd-marked-by').value.trim();
+
+  const divTimeRaw = document.getElementById('fd-diversion-time').value;
+  if (!divTimeRaw) {
+    showToast('⚠ Please enter the diversion date & time', 'warn');
+    return;
+  }
+  // datetime-local gives "YYYY-MM-DDTHH:MM" in LOCAL time with no
+  // timezone offset — convert to a full ISO string so the backend
+  // stores an unambiguous timestamp.
+  const diversionTimeIso = new Date(divTimeRaw).toISOString();
+
+  if (markedBy) localStorage.setItem('tpnodl_operator_name', markedBy);
+
+  // Pull current feeder/gss display info back out for the API payload —
+  // re-reading from the alert log avoids needing extra hidden fields
+  const a = (alertLog || []).find(x => x.id === alertId);
+
+  const r = await api('POST', '/api/field-diversion/mark', {
+    alert_id: alertId,
+    asset_code: assetCode,
+    feeder_name: a?.Feeder || '',
+    gss_name: a?.Gss || '',
+    source_asset_code: sourceAssetCode,
+    source_feeder_name: sourceFeederName,
+    source_gss_name: sourceGssName,
+    diversion_time: diversionTimeIso,
+    note: note,
+    marked_by: markedBy,
+  });
+
+  if (r?.ok) {
+    showToast('✅ Marked as field-diverted', 'success');
+    closeFieldDivModal();
+    await pollAlerts();
+  } else {
+    showToast(`❌ ${r?.error || 'Failed to mark diversion'}`, 'error');
+  }
+}
+
+async function openUnmarkFieldDiversion(alertId) {
+  if (!confirm('Remove the field-diversion mark for this alert?')) return;
+  const r = await api('POST', '/api/field-diversion/clear', { alert_id: alertId, reason: 'manual unmark' });
+  if (r?.ok) {
+    showToast('✅ Field-diversion mark removed', 'success');
+    await pollAlerts();
+  } else {
+    showToast(`❌ ${r?.error || 'Failed to unmark'}`, 'error');
+  }
+}
+
+async function forceClearAlert(alertId) {
+  if (!confirm('Force-clear this alert?\n\nOnly do this if you have CONFIRMED in the field '
+    + 'that the underlying condition no longer applies. This bypasses the normal automatic '
+    + 'clearing logic entirely.')) return;
+  const reason = prompt('Optional: reason for force-clearing (shown in the alert history)') || '';
+  const r = await api('POST', `/api/alerts/${alertId}/force-clear`, { reason });
+  if (r?.ok) {
+    showToast('✅ Alert force-cleared', 'success');
+    await pollAlerts();
+  } else {
+    showToast(`❌ ${r?.error || 'Failed to force-clear'}`, 'error');
+  }
+}
+
+async function saveFeeder() {
+  const name   = document.getElementById('m-feeder').value.trim();
+  const rating = parseFloat(document.getElementById('m-rating').value);
+  if (!name)           { showToast('Feeder name is required', 'error'); return; }
+  if (!rating || rating<=0) { showToast('Valid rating (A) required', 'error'); return; }
+
+  const entry = {
+    AssetCode:    document.getElementById('m-asset').value.trim(),
+    CircleName:   document.getElementById('m-circle').value,
+    DivisionName: document.getElementById('m-division').value.trim(),
+    GssName:      document.getElementById('m-gss').value.trim(),
+    FeederName:   name,
+    FeederRating: rating,
+    VoltageRating:parseFloat(document.getElementById('m-vn').value)||33,
+    FeederType:   document.getElementById('m-type').value,
+    PowerSign:    document.getElementById('m-sign').value,
+    FeederCode:   document.getElementById('m-fcode').value.trim(),
+    IsSolarPlant: document.getElementById('m-solar').checked
+  };
+
+  const idx = document.getElementById('modal-edit-idx').value;
+  let result;
+  if (idx !== '') {
+    result = await api('PUT', `/api/feeders/${idx}`, entry);
+  } else {
+    result = await api('POST', '/api/feeders', entry);
+  }
+
+  if (result?.ok) {
+    await loadFeeders();
+    renderMasterTable();
+    renderDashboard();
+    closeModal();
+    showToast('✅ Feeder saved: ' + name, 'success');
+  } else {
+    showToast('❌ Save failed', 'error');
+  }
+}
+
+async function deleteFeeder(idx) {
+  if (!confirm(`Delete feeder "${feederMaster[idx]?.FeederName}"?`)) return;
+  const r = await api('DELETE', `/api/feeders/${idx}`);
+  if (r?.ok) {
+    await loadFeeders();
+    renderMasterTable();
+    renderDashboard();
+    showToast('Feeder deleted', 'warn');
+  }
+}
+
+async function importFromLive() {
+  if (!liveData.length) { showToast('No live data yet — click Fetch Now first', 'warn'); return; }
+  const entries = liveData.map(r => ({
+    AssetCode:    r.AssetCode || '',
+    CircleName:   r.Circle    || '',
+    DivisionName: r.Division  || '',
+    GssName:      r.Gss       || '',
+    FeederName:   r.Feeder    || r.AssetCode || '',
+    FeederRating: 200,           // user must update
+    VoltageRating:33,
+    FeederType:   r.FeederType || 'Non-Priority',
+    FeederCode:   ''
+  })).filter(e => e.AssetCode);
+
+  const r = await api('POST', '/api/feeders/import', { entries });
+  if (r) {
+    await loadFeeders();
+    renderMasterTable();
+    renderDashboard();
+    showToast(`✅ ${r.added} added, ${r.updated} updated — set FeederRating for each!`, 'success');
+  }
+}
+
+// ── Excel Upload ──────────────────────────────────────────
+function triggerExcelUpload() {
+  document.getElementById('excel-upload-input').click();
+}
+
+function downloadTemplate() {
+  window.open(BACKEND + '/api/feeders/template', '_blank');
+  showToast('📋 Downloading FeederMaster_Template.xlsx', 'success');
+}
+
+async function handleExcelUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const prog    = document.getElementById('upload-progress');
+  const statusEl= document.getElementById('upload-status');
+  const bar     = document.getElementById('upload-bar');
+
+  prog.style.display = 'block';
+  bar.style.width    = '10%';
+  statusEl.textContent = `Uploading ${file.name} (${(file.size/1024).toFixed(1)} KB)…`;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    bar.style.width = '40%';
+    const r = await fetch(BACKEND + '/api/feeders/upload-excel', {
+      method: 'POST',
+      body: formData
+    });
+    bar.style.width = '80%';
+    const data = await r.json();
+    bar.style.width = '100%';
+
+    if (data.ok) {
+      statusEl.textContent = `✅ ${data.message}`;
+      statusEl.style.color = 'var(--green)';
+      showToast(`✅ ${data.message}`, 'success');
+      // Reload feeder master table
+      await loadFeeders();
+      populateMasterCircleFilter();
+      renderMasterTable();
+      renderDashboard();
+    } else {
+      statusEl.textContent = `❌ Error: ${data.error}`;
+      statusEl.style.color = 'var(--red)';
+      showToast(`❌ Upload failed: ${data.error}`, 'error');
+    }
+  } catch(e) {
+    statusEl.textContent = `❌ Upload error: ${e.message}`;
+    statusEl.style.color = 'var(--red)';
+    showToast('❌ Upload failed — check server connection', 'error');
+  } finally {
+    setTimeout(() => {
+      prog.style.display = 'none';
+      bar.style.width    = '0%';
+      statusEl.style.color = '';
+    }, 4000);
+    // Reset input so same file can be re-uploaded
+    event.target.value = '';
+  }
+}
+
+function exportMasterCSV() {
+  const header = 'AssetCode,CircleName,DivisionName,GssName,FeederName,FeederRating(A),VoltageRating(kV),FeederType,PowerSign,FeederCode';
+  const rows = feederMaster.map(f =>
+    [f.AssetCode,f.CircleName,f.DivisionName,f.GssName,
+     `"${f.FeederName}"`,f.FeederRating,f.VoltageRating,f.FeederType,f.PowerSign||'',(f.FeederCode||'')].join(',')
+  );
+  const blob = new Blob([header+'\n'+rows.join('\n')],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'TPNODL_FeederMaster_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS — save to backend
+// ═══════════════════════════════════════════════════════════════
+function applySettingsToUI() { updateVnPreview(); }
+
+async function saveLoginConfig() {
+  const r = await api('POST', '/api/config/scraper', {
+    username:         document.getElementById('cfg-user').value,
+    password:         document.getElementById('cfg-pass').value,
+    role:             document.getElementById('cfg-role').value,
+    interval_minutes: parseInt(document.getElementById('cfg-interval').value)
+  });
+  if (r?.ok) {
+    showToast('✅ Login config saved — click Fetch Now to test', 'success');
+    startAutoRefresh();
+  } else showToast('❌ Save failed', 'error');
+}
+
+async function saveWeatherConfig() {
+  const r = await api('POST', '/api/weather/config', {
+    mbscada_user:     document.getElementById('cfg-wx-user').value,
+    mbscada_password: document.getElementById('cfg-wx-pass').value,
+    mbscada_company:  document.getElementById('cfg-wx-company').value || 'TPNODL',
+  });
+  if (r?.ok) {
+    showToast('✅ Weather login saved — background fetch will start automatically', 'success');
+    document.getElementById('wx-status').textContent = '';
+  } else {
+    showToast(`❌ ${r?.error || 'Save failed'}`, 'error');
+  }
+}
+
+async function testWeatherConnection() {
+  const statusEl = document.getElementById('wx-status');
+  statusEl.textContent = '⏳ Testing connection to mbscada.com...';
+  statusEl.style.color = 'var(--text3)';
+  const r = await api('POST', '/api/weather/test');
+  if (r?.ok) {
+    const circles = Object.keys(r.circle_weather || {});
+    statusEl.style.color = 'var(--green)';
+    statusEl.textContent = circles.length
+      ? `✅ Connected — got data for: ${circles.join(', ')}`
+      : '⚠ Connected, but no circle data returned (check site map / credentials)';
+  } else {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = `❌ ${r?.error || 'Connection test failed'}`;
+  }
+}
+
+async function saveNotifyDelays() {
+  const types = ['OV','UV','OL_L1','OL_L2','OL_L3','FEEDER_OFF',
+                 'PT_PHASE_MISSING','LINE_JUMPER_PARTING','LOAD_DIVERTED','LOAD_RESTORED'];
+  const payload = {};
+  for (const t of types) {
+    const el = document.getElementById(`nd-${t}`);
+    if (el) payload[`notify_delay.${t}`] = parseInt(el.value) || 0;
+  }
+  const r = await api('POST', '/api/config/notify_delay', payload);
+  if (r?.ok) showToast('✅ Notification delays saved', 'success');
+  else showToast('❌ Save failed', 'error');
+}
+
+function loadNotifyDelays(cfg) {
+  const types = ['OV','UV','OL_L1','OL_L2','OL_L3','FEEDER_OFF',
+                 'PT_PHASE_MISSING','LINE_JUMPER_PARTING','LOAD_DIVERTED','LOAD_RESTORED'];
+  const defaults = {OV:15,UV:60,OL_L1:10,OL_L2:0,OL_L3:0,FEEDER_OFF:10,
+                    PT_PHASE_MISSING:0,LINE_JUMPER_PARTING:0,LOAD_DIVERTED:0,LOAD_RESTORED:0};
+  for (const t of types) {
+    const el = document.getElementById(`nd-${t}`);
+    if (el) {
+      const v = cfg[`notify_delay.${t}`];
+      el.value = (v !== undefined && v !== null) ? v : (defaults[t] ?? 0);
+    }
+  }
+}
+
+async function saveVoltageConfig() {
+  const r = await api('POST', '/api/config/voltage', {
+    vn_kv:                  parseFloat(document.getElementById('cfg-vn').value)||33,
+    ov_pct:                 parseFloat(document.getElementById('cfg-ov').value)||6,
+    uv_pct:                 parseFloat(document.getElementById('cfg-uv').value)||9,
+    load_threshold_pct:     parseFloat(document.getElementById('cfg-load-thr').value)||100,
+    ol_l2_pct:              parseFloat(document.getElementById('cfg-ol-l2')?.value)||110,
+    ol_l3_pct:              parseFloat(document.getElementById('cfg-ol-l3')?.value)||120,
+    solar_off_threshold_a:  parseFloat(document.getElementById('cfg-solar-off-a')?.value)||0.15,
+    solar_off_wait_minutes: parseInt(document.getElementById('cfg-solar-off-wait')?.value)||10,
+  });
+  if (r?.ok) {
+    await loadConfig();
+    renderDashboard();
+    showToast('✅ Voltage thresholds saved & applied', 'success');
+  } else showToast('❌ Save failed', 'error');
+}
+
+function updateVnPreview() {
+  const vn = parseFloat(document.getElementById('cfg-vn')?.value)||33;
+  const ov = parseFloat(document.getElementById('cfg-ov')?.value)||6;
+  const uv = parseFloat(document.getElementById('cfg-uv')?.value)||9;
+  const el = document.getElementById('vn-preview');
+  if (el) el.textContent = `OV limit: ${(vn*(1+ov/100)).toFixed(3)} kV | UV limit: ${(vn*(1-uv/100)).toFixed(3)} kV`;
+}
+document.getElementById('cfg-vn')?.addEventListener('input', updateVnPreview);
+document.getElementById('cfg-ov')?.addEventListener('input', updateVnPreview);
+document.getElementById('cfg-uv')?.addEventListener('input', updateVnPreview);
+document.getElementById('flt-circle')?.addEventListener('change', updateDivFilter);
+
+// ═══════════════════════════════════════════════════════════════
+// EVENT TYPE SELECTOR — shared by Email and WhatsApp
+// ═══════════════════════════════════════════════════════════════
+const EVENT_TYPES = [
+  { id:'OV',                  label:'Over Voltage',          color:'#ff3d71', icon:'⚡' },
+  { id:'UV',                  label:'Under Voltage',          color:'#ffd740', icon:'⬇' },
+  { id:'OL',                  label:'Overload',               color:'#ff9100', icon:'🔴' },
+  { id:'FEEDER_OFF',          label:'Feeder OFF / Trip',      color:'#8899bb', icon:'⚫' },
+  { id:'PT_PHASE_MISSING',    label:'PT Phase Missing',       color:'#ff6b6b', icon:'⚠️' },
+  { id:'LINE_JUMPER_PARTING', label:'Line Jumper Parting',    color:'#ff6b6b', icon:'⛓️' },
+  { id:'SUDDEN_LOAD_DROP',    label:'Sudden Load Drop',       color:'#a97fff', icon:'📉' },
+  { id:'SUDDEN_LOAD_RAISE',   label:'Sudden Load Raise',      color:'#4dabf7', icon:'📈' },
+  { id:'LOAD_DIVERTED',       label:'Load Diverted (BC)',     color:'#f783ac', icon:'🔀' },
+  { id:'LOAD_RESTORED',       label:'Load Restored',          color:'#69db7c', icon:'✅' },
+];
+
+function renderEventTypeChecks(containerId, enabledTypes) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  // Default: all enabled
+  const enabled = enabledTypes || EVENT_TYPES.map(e => e.id);
+  el.innerHTML = EVENT_TYPES.map(e => `
+    <label class="et-check">
+      <input type="checkbox" id="${containerId}-${e.id}"
+        ${enabled.includes(e.id) ? 'checked' : ''}>
+      <span class="et-check-dot" style="background:${e.color}"></span>
+      <span class="et-check-label">${e.icon} ${e.label}</span>
+    </label>`).join('');
+}
+
+function getCheckedEventTypes(containerId) {
+  return EVENT_TYPES
+    .filter(e => document.getElementById(`${containerId}-${e.id}`)?.checked)
+    .map(e => e.id);
+}
+
+async function saveEmailConfig() {
+  const to = document.getElementById('cfg-email-to').value
+    .split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
+  const outlookDomains = document.getElementById('cfg-outlook-domains').value
+    .split(/[\n,]/).map(s=>s.trim().toLowerCase().replace(/^@/, '')).filter(Boolean);
+  const r = await api('POST', '/api/config/email', {
+    enabled:        to.length > 0,
+    use_gmail_api:  document.getElementById('cfg-use-gmail-api')?.checked || false,
+    gmail_accounts: getGmailAccountsFromUI(),
+    use_outlook_api: document.getElementById('cfg-use-outlook-api')?.checked || false,
+    outlook_domains: outlookDomains,
+    smtp_host:      document.getElementById('cfg-smtp-host').value,
+    smtp_port:      parseInt(document.getElementById('cfg-smtp-port').value),
+    tls:            document.getElementById('cfg-smtp-tls').value,
+    from_addr:      document.getElementById('cfg-smtp-from').value,
+    password:       document.getElementById('cfg-smtp-pwd').value || undefined,
+    recipients:     to,
+    subject_prefix: document.getElementById('cfg-email-subj').value,
+    alert_types:    getCheckedEventTypes('email-event-types'),
+  });
+  if (r?.ok) showToast('✅ Email config saved', 'success');
+  else showToast('❌ Save failed', 'error');
+}
+
+function toggleGmailApiMode() {
+  const useApi = document.getElementById('cfg-use-gmail-api')?.checked;
+  const smtpGroup = document.getElementById('smtp-fields-group');
+  const note      = document.getElementById('gmail-api-note');
+  const multiGroup = document.getElementById('gmail-multi-account-group');
+  if (smtpGroup) smtpGroup.style.display = useApi ? 'none' : '';
+  if (note)      note.style.display      = useApi ? '' : 'none';
+  if (multiGroup) multiGroup.style.display = useApi ? '' : 'none';
+}
+
+function toggleOutlookApiMode() {
+  const useApi = document.getElementById('cfg-use-outlook-api')?.checked;
+  const note = document.getElementById('outlook-api-note');
+  if (note) note.style.display = useApi ? '' : 'none';
+}
+
+function addGmailAccountRow(fromAddr, tokenFile) {
+  const list = document.getElementById('gmail-accounts-list');
+  const row = document.createElement('div');
+  row.className = 'gmail-account-row';
+  row.style = 'display:flex;gap:6px;margin-bottom:6px;align-items:center';
+  row.innerHTML = `
+    <input type="email" placeholder="account2@gmail.com" class="ga-from" style="flex:1" value="${fromAddr || ''}">
+    <input type="text" placeholder="data/gmail_token_2.json" class="ga-token" style="flex:1" value="${tokenFile || ''}">
+    <button class="btn ghost" onclick="this.closest('.gmail-account-row').remove()" style="padding:6px 10px">✕</button>`;
+  list.appendChild(row);
+}
+
+function getGmailAccountsFromUI() {
+  return Array.from(document.querySelectorAll('#gmail-accounts-list .gmail-account-row'))
+    .map(row => ({
+      from_addr: row.querySelector('.ga-from').value.trim(),
+      token_file: row.querySelector('.ga-token').value.trim(),
+    }))
+    .filter(a => a.from_addr && a.token_file);
+}
+
+function setGmailAccountsInUI(accounts) {
+  const list = document.getElementById('gmail-accounts-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (accounts || []).forEach(a => addGmailAccountRow(a.from_addr, a.token_file));
+}
+
+async function discoverSmtp() {
+  showToast('🔍 Scanning for reachable SMTP servers…', 'warn');
+  const panel = document.getElementById('smtp-discover-panel');
+  const res   = document.getElementById('smtp-discover-results');
+  panel.style.display = 'block';
+  res.innerHTML = '<div style="color:var(--text3)">Scanning... (up to 30s)</div>';
+  const r = await api('POST', '/api/email/discover');
+  if (!r) { res.innerHTML = '<div style="color:var(--red)">Scan failed</div>'; return; }
+  const reachable = r.reachable || [];
+  if (!reachable.length) {
+    res.innerHTML = `<div style="color:var(--red)">❌ No SMTP servers reachable from this machine.<br>
+      All outbound mail ports appear blocked.<br>
+      <b>Ask IT team for internal SMTP relay server address.</b></div>`;
+    showToast('❌ No SMTP servers found — check with IT', 'error');
+    return;
+  }
+  res.innerHTML = `<div style="color:var(--green);margin-bottom:8px">✅ Found ${reachable.length} reachable server(s):</div>` +
+    reachable.map(s => `<div style="margin:4px 0;display:flex;gap:8px;align-items:center">
+      <button class="btn sm" onclick="useSmtp('${s.host}',${s.port})" title="Use this server">
+        Use ${s.host}:${s.port}
+      </button>
+      <span style="color:var(--text2);font-family:var(--font-mono)">${s.banner||'(no banner)'}</span>
+    </div>`).join('');
+  showToast(`✅ Found ${reachable.length} SMTP server(s)`, 'success');
+}
+
+function useSmtp(host, port) {
+  document.getElementById('cfg-smtp-host').value = host;
+  document.getElementById('cfg-smtp-port').value = port;
+  // Port 25 = plain/no-auth on internal relay, port 465 = SSL
+  if (port === 25) {
+    document.getElementById('cfg-smtp-tls').value = 'None';
+  } else if (port === 465) {
+    document.getElementById('cfg-smtp-tls').value = 'SSL';
+  } else {
+    document.getElementById('cfg-smtp-tls').value = 'STARTTLS';
+  }
+  showToast(`✅ Set to ${host}:${port} — click Save then Send Test Email`, 'success');
+  document.getElementById('smtp-discover-panel').style.display = 'none';
+}
+
+async function pingSmtp() {
+  showToast('🔌 Testing SMTP connectivity…', 'warn');
+  const r = await api('POST', '/api/email/ping');
+  if (r?.ok) showToast(r.message, 'success');
+  else       showToast(r?.message || '❌ SMTP unreachable', 'error');
+}
+
+async function testEmail() {
+  showToast('📤 Sending test email…', 'warn');
+  const r = await api('POST', '/api/email/test');
+  if (r?.ok) showToast('✅ Test email sent to: ' + (r.to||[]).join(', '), 'success');
+  else showToast('❌ ' + (r?.error || 'Email send failed — check SMTP settings'), 'error');
+}
+
+async function saveWAConfig() {
+  const nums = document.getElementById('cfg-wa-numbers').value
+    .split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
+  const provider = document.getElementById('cfg-wa-provider').value;
+  const r = await api('POST', '/api/config/whatsapp', {
+    enabled:           nums.length > 0,
+    provider,
+    twilio_sid:        document.getElementById('cfg-wa-sid')?.value || '',
+    twilio_token:      document.getElementById('cfg-wa-token')?.value || '',
+    twilio_from:       document.getElementById('cfg-wa-from')?.value || 'whatsapp:+14155238886',
+    meta_phone_id:     document.getElementById('cfg-wa-phoneid')?.value || '',
+    meta_access_token: document.getElementById('cfg-wa-access')?.value || '',
+    recipients:        nums,
+    cooldown_minutes:  parseInt(document.getElementById('cfg-wa-cooldown').value)||30,
+    alert_types:       getCheckedEventTypes('wa-event-types'),
+  });
+  if (r?.ok) showToast('✅ WhatsApp config saved', 'success');
+  else showToast('❌ Save failed', 'error');
+}
+
+async function testWALaunch() {
+  showToast('🔧 Testing ChromeDriver launch...', 'warn');
+  const r = await api('POST', '/api/whatsapp/test-launch');
+  if (r?.ok) {
+    showToast(`✅ ${r.message} | ChromeDriver: ${r.chromedriver_version?.split(' ')[0]}`, 'success');
+  } else {
+    showToast(`❌ ${r?.error || 'Launch failed'}`, 'error');
+    // Also show in console for full detail
+    console.error('ChromeDriver test failed:', r);
+  }
+}
+
+async function autoConnectWA() {
+  showToast('🔗 Connecting to existing Chrome...', 'warn');
+  const r = await api('POST', '/api/whatsapp/auto-connect');
+  if (r?.ok) {
+    showToast('🔗 ' + r.message, 'warn');
+    // Check status after 5 seconds
+    setTimeout(async () => { await checkWAStatus(); }, 5000);
+  } else {
+    showToast('❌ Auto-connect failed', 'error');
+  }
+}
+
+async function detectWAXPaths() {
+  showToast('🔍 Probing WhatsApp Web DOM for current selectors…', 'warn');
+  const r = await api('POST', '/api/whatsapp/detect-xpaths');
+  if (!r) { showToast('❌ Detection failed — is WhatsApp Web browser open?', 'error'); return; }
+  if (!r.ok) { showToast('❌ ' + (r.error || 'Detection failed'), 'error'); return; }
+  const inputCount = (r.msg_input||[]).length;
+  const fromDom    = r.discovered_from_dom ? ' (discovered from live DOM)' : '';
+  if (inputCount > 0) {
+    showToast(`✅ Found ${inputCount} input selector(s)${fromDom} — saved to wa_xpaths.json`, 'success');
+  } else {
+    showToast('⚠ No input selectors found — WhatsApp Web may need QR scan first', 'warn');
+  }
+}
+
+async function testWhatsApp() {
+  const provider = document.getElementById('cfg-wa-provider').value;
+  if (provider === 'link') {
+    const nums = document.getElementById('cfg-wa-numbers').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    if (!nums.length) { showToast('Enter at least one number first', 'error'); return; }
+    const r = await api('GET', `/api/whatsapp/link?number=${encodeURIComponent(nums[0])}&message=TPNODL+Monitor+test`);
+    if (r?.link) window.open(r.link, '_blank');
+  } else {
+    showToast('📲 Sending test WhatsApp…', 'warn');
+    const r = await api('POST', '/api/whatsapp/test');
+    if (r?.ok) showToast('✅ Test WhatsApp sent to: '+(r.to||[]).join(', '), 'success');
+    else showToast('❌ '+(r?.error||'Failed — check credentials'), 'error');
+  }
+}
+
+function toggleWAFields() {
+  const p = document.getElementById('cfg-wa-provider').value;
+  document.getElementById('wa-web-fields').style.display    = p==='wa_web' ?'block':'none';
+  document.getElementById('wa-twilio-fields').style.display = p==='twilio' ?'block':'none';
+  document.getElementById('wa-meta-fields').style.display   = p==='meta'   ?'block':'none';
+}
+
+let _waPollInterval = null;
+
+async function initWAWeb() {
+  // Clear any existing poll
+  if (_waPollInterval) { clearInterval(_waPollInterval); _waPollInterval = null; }
+  const btn = document.getElementById('wa-init-btn');
+  btn.textContent = '⏳ Opening Chrome…';
+  btn.disabled = true;
+  await api('POST', '/api/whatsapp/init');
+  showToast('🌐 Chrome opening — scan QR code in the browser window', 'warn');
+  btn.textContent = '🌐 Open New WhatsApp Web';
+  btn.disabled = false;
+  // Poll status until logged in (max 2 min)
+  let polls = 0;
+  _waPollInterval = setInterval(async () => {
+    polls++;
+    await checkWAStatus();
+    const dot = document.getElementById('wa-status-dot');
+    if ((dot && dot.style.background.includes('0,230')) || polls > 24) {
+      clearInterval(_waPollInterval); _waPollInterval = null;
+      if (polls <= 24) showToast('✅ WhatsApp Web logged in!', 'success');
+    }
+  }, 5000);
+}
+
+async function checkWAStatus() {
+  const d = await api('GET', '/api/whatsapp/status');
+  if (!d) return;
+  const dot    = document.getElementById('wa-status-dot');
+  const text   = document.getElementById('wa-status-text');
+  const banner = document.getElementById('wa-status-banner');
+  if (!dot || !text) return;
+
+  // Status comes from whatsapp_mgr.get_status():
+  // status: "ready" | "loading" | "connected" | "not_initialized"
+  // ready: true/false
+  const status = d.status || '';
+  const ready  = d.ready  || false;
+
+  if (ready || status === 'ready') {
+    // ✅ Connected & logged in — green banner
+    dot.style.background = 'var(--green)';
+    dot.style.boxShadow  = '0 0 8px var(--green)';
+    text.textContent     = '✅ Connected — WhatsApp Web ready to send';
+    text.style.color     = 'var(--green)';
+    if (banner) {
+      banner.style.background  = 'rgba(0,200,100,0.10)';
+      banner.style.border      = '1px solid rgba(0,200,100,0.35)';
+      banner.style.borderRadius = '6px';
+      banner.style.padding     = '6px 10px';
+    }
+  } else if (status === 'loading' || d.wa_open) {
+    // ⏳ Chrome open, WA loading
+    dot.style.background = 'var(--yellow)';
+    dot.style.boxShadow  = '0 0 6px var(--yellow)';
+    text.textContent     = '⏳ WhatsApp Web open — waiting for login...';
+    text.style.color     = 'var(--yellow)';
+    if (banner) { banner.style.background = ''; banner.style.border = ''; }
+  } else if (status === 'connected') {
+    // 🟠 Chrome open, not on WA page
+    dot.style.background = 'var(--orange)';
+    dot.style.boxShadow  = '';
+    text.textContent     = '🟠 Chrome connected — open WhatsApp Web tab';
+    text.style.color     = 'var(--orange)';
+    if (banner) { banner.style.background = ''; banner.style.border = ''; }
+  } else {
+    // ⚫ Not initialized
+    dot.style.background = 'var(--text3)';
+    dot.style.boxShadow  = '';
+    text.textContent     = 'Not initialized — click Open WhatsApp Web';
+    text.style.color     = 'var(--text2)';
+    if (banner) { banner.style.background = ''; banner.style.border = ''; }
+  }
+}
+
+async function closeWAWeb() {
+  await api('POST', '/api/whatsapp/close');
+  await checkWAStatus();
+  showToast('Chrome driver closed', 'warn');
+}
+
+// Contact directory — Global Contacts (set above) + Dedicated Area Contacts (this directory)
+function renderContactTable(contacts) {
+  const tbody = document.getElementById('contact-tbody');
+  if (!tbody) return;
+  const c = contacts || [];
+  if (!c.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text3);padding:12px">No dedicated area contacts configured — every alert still reaches your Global Contacts above</td></tr>';
+    return;
+  }
+  tbody.innerHTML = c.map((ct,i) => `
+    <tr>
+      <td>${ct.circle||'<i style="color:var(--text3)">All</i>'}</td>
+      <td>${ct.division||'<i style="color:var(--text3)">All</i>'}</td>
+      <td style="font-size:11px">${(ct.emails||'').split('\n').join(', ')}</td>
+      <td style="font-size:11px">${(ct.waNos||'').split('\n').join(', ')}</td>
+      <td><span class="dot ${ct.active!==false?'dot-green':'dot-red'}"></span></td>
+      <td>
+        <button class="btn sm ghost" onclick="openContactModal(${i})">✎</button>
+        <button class="btn sm danger" onclick="deleteContact(${i})" style="margin-left:4px">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+// Splits on comma OR newline, trims, drops empties — so pasting a whole
+// list either way (one-per-line, or comma-separated, or a mix) just works.
+function splitContactList(raw) {
+  return (raw || '').split(/[\n,]/).map(s => s.trim()).filter(Boolean);
+}
+
+async function openContactModal(idx) {
+  document.getElementById('contact-modal-idx').value = (idx === undefined) ? '' : idx;
+  if (idx === undefined) {
+    document.getElementById('contact-modal-title').textContent = '📋 Add Dedicated Area Contact';
+    document.getElementById('contact-circle').value = '';
+    document.getElementById('contact-division').value = '';
+    document.getElementById('contact-emails').value = '';
+    document.getElementById('contact-wanos').value = '';
+    document.getElementById('contact-active').checked = true;
+  } else {
+    const d = await api('GET', '/api/config');
+    const ct = (d?.contacts || [])[idx];
+    if (!ct) return;
+    document.getElementById('contact-modal-title').textContent = '📋 Edit Dedicated Area Contact';
+    document.getElementById('contact-circle').value = ct.circle || '';
+    document.getElementById('contact-division').value = ct.division || '';
+    document.getElementById('contact-emails').value = (ct.emails || '').split('\n').join(', ');
+    document.getElementById('contact-wanos').value = (ct.waNos || '').split('\n').join(', ');
+    document.getElementById('contact-active').checked = ct.active !== false;
+  }
+  document.getElementById('contact-modal').classList.add('open');
+}
+
+function closeContactModal() {
+  document.getElementById('contact-modal').classList.remove('open');
+}
+
+async function submitContactModal() {
+  const idxRaw = document.getElementById('contact-modal-idx').value;
+  const circle   = document.getElementById('contact-circle').value.trim();
+  const division = document.getElementById('contact-division').value.trim();
+  const emails   = splitContactList(document.getElementById('contact-emails').value).join('\n');
+  const waNos    = splitContactList(document.getElementById('contact-wanos').value).join('\n');
+  const active   = document.getElementById('contact-active').checked;
+
+  if (!emails && !waNos) {
+    showToast('❌ Add at least one email or WhatsApp number', 'error');
+    return;
+  }
+
+  const d = await api('GET', '/api/config');
+  const contacts = [...(d?.contacts || [])];
+  const entry = { circle, division, emails, waNos, active };
+  if (idxRaw === '') {
+    contacts.push(entry);
+  } else {
+    contacts[parseInt(idxRaw)] = entry;
+  }
+  const r = await api('POST', '/api/config/contacts', contacts);
+  if (r?.ok) {
+    await loadConfig();
+    closeContactModal();
+    showToast('✅ Contact saved', 'success');
+  } else {
+    showToast('❌ Save failed', 'error');
+  }
+}
+
+async function deleteContact(i) {
+  const d = await api('GET', '/api/config');
+  const contacts = (d?.contacts || []).filter((_,idx)=>idx!==i);
+  await api('POST', '/api/config/contacts', contacts);
+  await loadConfig();
+  showToast('Contact removed', 'warn');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAV / CLOCK / TOAST
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD EVENTS TAB — SLD / SLR
+// ═══════════════════════════════════════════════════════════════
+let loadEventLog = [];
+let leFilter = 'all';
+
+function setLeFilter(f) {
+  leFilter = f;
+  ['all','SUDDEN_LOAD_DROP','SUDDEN_LOAD_RAISE'].forEach((k,i) => {
+    const ids = ['le-all','le-drop','le-raise'];
+    document.getElementById(ids[i])?.classList.toggle('active', k === f);
+  });
+  renderLoadEvents();
+}
+
+async function pollLoadEvents() {
+  const d = await api('GET', '/api/alerts?limit=500');
+  if (!d) return;
+  const newEvents = (d.data || []).filter(a =>
+    ['SUDDEN_LOAD_DROP','SUDDEN_LOAD_RAISE'].includes(a.type)
+  );
+  // If new unacked events arrived after user cleared, show them again
+  if (window._leUserCleared) {
+    const prevIds = new Set((loadEventLog || []).map(a => a.id));
+    const hasNew  = newEvents.some(a => !a.acked && !prevIds.has(a.id));
+    if (hasNew) window._leUserCleared = false;
+  }
+  loadEventLog = newEvents;
+  renderLoadEvents();
+  // Update badge
+  const unacked = loadEventLog.filter(a => !a.acked).length;
+  const badge = document.getElementById('load-event-badge');
+  if (badge) {
+    badge.textContent = unacked;
+    badge.style.display = unacked > 0 ? 'inline' : 'none';
+  }
+}
+
+function renderLoadEvents() {
+  const el = document.getElementById('load-event-list');
+  if (!el) return;
+  let data = loadEventLog;
+  // Always hide individually acked events from list (persists across refresh via DB)
+  // _leUserCleared is for "Clear All" which hides everything acked at once
+  data = data.filter(a => !a.acked);
+  if (leFilter !== 'all') data = data.filter(a => a.type === leFilter);
+
+  const countEl = document.getElementById('load-event-count');
+  if (countEl) countEl.textContent = `(${data.length} events)`;
+
+  if (!data.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📊</div><div>No load events in selected filter</div></div>';
+    return;
+  }
+
+  el.innerHTML = data.map(a => {
+    const isDrop  = a.type === 'SUDDEN_LOAD_DROP';
+    const icon    = isDrop ? '📉' : '📈';
+    const label   = isDrop ? 'Sudden Load Drop' : 'Sudden Load Raise';
+    const color   = isDrop ? 'var(--red)' : 'var(--accent)';
+    const ts      = new Date(a.first_seen || a.timestamp).toLocaleString('en-IN');
+    const prev    = a.limit  ? `${a.limit}A` : '—';
+    const curr    = a.value  ? `${a.value}A` : '—';
+    const delta   = (a.value && a.limit)
+      ? `${isDrop ? '-' : '+'}${Math.abs(((a.value-a.limit)/a.limit)*100).toFixed(1)}%`
+      : '';
+    return `<div class="alert-item${a.acked ? ' alert-acked' : ''}" id="alert-${a.id}">
+      <div class="alert-icon" style="font-size:20px">${icon}</div>
+      <div class="alert-body" style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+          <span style="font-size:14px;font-weight:600;color:${color}">${a.Feeder||a.AssetCode} — ${label}</span>
+          ${delta ? `<span style="background:rgba(255,255,255,0.08);border-radius:3px;padding:2px 7px;font-size:11px;font-weight:600;color:${color}">${delta}</span>` : ''}
+          <span style="font-size:10px;color:var(--text3)">${a.severity||''}</span>
+        </div>
+        <div class="alert-meta"><span style="color:var(--accent);font-family:var(--font-mono)">${a.AssetCode}</span> | ${a.Circle} / ${a.Division} | GSS: ${a.Gss}</div>
+        <div class="alert-meta" style="color:var(--text2);margin-top:2px">${a.detail||''}</div>
+        <div class="alert-meta" style="margin-top:3px;font-family:var(--font-mono);font-size:11px">
+          Before: <b>${prev}</b> &nbsp;→&nbsp; After: <b>${curr}</b>
+          &nbsp;|&nbsp; Vr/Vy/Vb: ${(a.Vr||0).toFixed(3)} / ${(a.Vy||0).toFixed(3)} / ${(a.Vb||0).toFixed(3)} kV
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;min-width:120px">
+        <div class="alert-time">🕐 ${ts}</div>
+        ${!a.acked
+          ? `<button class="btn ghost sm" onclick="ackLoadEvent(this)" data-id="${a.id}">✓ Ack</button>`
+          : '<span style="font-size:10px;color:var(--text3)">✓ Acked</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function clearLoadEvents() {
+  if (!confirm('Clear acknowledged load events?')) return;
+  await api('POST', '/api/alerts/ack-all');
+  window._leUserCleared = true;
+  await pollLoadEvents();
+  showToast('✅ Load events cleared', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GSS VIEW TAB
+// ═══════════════════════════════════════════════════════════════
+let gssData = [];
+let selectedGSS = null;
+
+async function loadGSSView() {
+  const d = await api('GET', '/api/gss-summary');
+  if (!d || !d.gss) return;
+  gssData = d.gss;
+  document.getElementById('gss-count').textContent = `(${d.count} substations)`;
+  // Populate circle filter
+  const circles = [...new Set(gssData.map(g=>g.Circle).filter(Boolean))].sort();
+  const sel = document.getElementById('gss-circle-filter');
+  sel.innerHTML = '<option value="">All Circles</option>' +
+    circles.map(c=>`<option value="${c}">${c}</option>`).join('');
+  filterGSS();
+}
+
+function filterGSS() {
+  const q     = (document.getElementById('gss-search')?.value||'').toLowerCase();
+  const circ  = document.getElementById('gss-circle-filter')?.value||'';
+  const panel = document.getElementById('gss-detail-panel');
+  if (panel) panel.style.display = 'none';
+  selectedGSS = null;
+
+  let filtered = gssData.filter(g => {
+    if (circ && g.Circle !== circ) return false;
+    if (q && !g.Gss.toLowerCase().includes(q) &&
+             !g.Circle.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  renderGSSCards(filtered);
+}
+
+function renderGSSCards(list) {
+  const el = document.getElementById('gss-cards');
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🏭</div><div>No GSS found</div></div>';
+    return;
+  }
+  el.innerHTML = list.map(g => {
+    const hasOL  = g.alert_ol  > 0;
+    const hasOFF = g.alert_off > 0;
+    const hasDIV = g.alert_div > 0;
+    const hasOV  = g.alert_ov  > 0;
+    // UV shown only if: ≥2 non-BC feeders UV  AND  ≥2 active (non-BC) feeders running
+    // Condition 2 ensures there are healthy feeders to compare against (real bus UV)
+    const totalNonBC = g.feeder_count - (g.bc_count || 0);
+    const singleFeederGss = totalNonBC === 1;
+    const hasUV  = singleFeederGss
+      ? (g.uv_feeder_count || 0) >= 1                                           // single feeder: 1 UV = alert
+      : (g.uv_feeder_count || 0) >= 2 && (g.active_feeder_count || 0) >= 2;    // multi feeder: ≥2 UV needed
+    const borderClass = hasOV ? 'alert-ov' : hasUV ? 'alert-uv' :
+                        (hasOL||hasOFF||hasDIV) ? 'has-alerts' : '';
+    const isSelected = selectedGSS === g.Gss;
+
+    // Alert badge row
+    const badges = [
+      hasOFF ? `<span title="Feeder OFF" style="background:rgba(80,80,80,0.4);color:#ccc;border-radius:3px;padding:1px 6px;font-size:10px">⚫ ${g.alert_off} OFF</span>` : '',
+      hasOL  ? `<span title="Overloaded" style="background:rgba(255,145,0,0.2);color:var(--orange);border-radius:3px;padding:1px 6px;font-size:10px">🔴 ${g.alert_ol} OL</span>` : '',
+      hasDIV ? `<span title="Load Diverted" style="background:rgba(248,131,172,0.2);color:#f783ac;border-radius:3px;padding:1px 6px;font-size:10px">🔀 ${g.alert_div} DIV</span>` : '',
+    ].filter(Boolean).join(' ');
+
+    const ovCount = g.ov_feeder_count || 0;
+    const uvCount = g.uv_feeder_count || 0;
+    const ovBar = (ovCount > 0) ? `<div style="height:3px;background:var(--red);margin:-2px -2px 6px;border-radius:6px 6px 0 0" title="${ovCount} feeders OV"></div>` :
+                  (uvCount >= 2) ? `<div style="height:3px;background:var(--yellow);margin:-2px -2px 6px;border-radius:6px 6px 0 0" title="${uvCount} feeders UV"></div>` : '';
+
+    return `<div class="gss-card ${borderClass} ${isSelected?'selected':''}" onclick="selectGSS('${g.Gss.replace(/'/g,"\\'")}')">
+      ${ovBar}
+      <div style="font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--accent);
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${g.Gss}">${g.Gss}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">${g.Circle} · ${g.Division}</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <div>
+          <div style="font-size:10px;color:var(--text3)">NOW</div>
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--green)">${g.MW_now.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--text3)">MW · ${g.MVA_now.toFixed(2)} MVA</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--text3)">DAY PEAK</div>
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--accent)">${g.peak_mw.toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--text3)">MW</div>
+        </div>
+      </div>
+      ${badges ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">${badges}</div>` : ''}
+      ${g.gss_voltage ? `<div style="display:flex;align-items:baseline;gap:5px;margin-top:5px">
+        <span style="font-size:10px;color:var(--text3)">V BUS</span>
+        <span style="font-family:var(--font-head);font-size:14px;font-weight:700;color:${
+          g.gss_voltage > (thresholds.ov_limit||35) ? 'var(--red)' :
+          g.gss_voltage < (thresholds.uv_limit||30) ? 'var(--yellow)' : 'var(--green)'}">${g.gss_voltage.toFixed(3)} kV</span>
+        <span style="font-size:9px;color:var(--text3)">${g.healthy_meter_count}m</span>
+      </div>` : ''}
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">${g.feeder_count} feeders (${g.bc_count} BC)</div>
+    </div>`;
+  }).join('');
+}
+
+function selectGSS(gssName) {
+  selectedGSS = gssName;
+  const g = gssData.find(x => x.Gss === gssName);
+  if (!g) return;
+
+  // Highlight selected card
+  document.querySelectorAll('.gss-card').forEach(c => c.classList.remove('selected'));
+  event?.currentTarget?.classList.add('selected');
+
+  // Show detail panel
+  const panel = document.getElementById('gss-detail-panel');
+  const title = document.getElementById('gss-detail-title');
+  const tbody = document.getElementById('gss-detail-tbody');
+  if (!panel || !tbody) return;
+
+  title.textContent = `${g.Gss}  ·  ${g.Circle} / ${g.Division}`;
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+
+  const STATUS_COLOR = {OV:'var(--red)',UV:'var(--yellow)',OL:'var(--orange)',
+                        OFF:'#888',OK:'var(--green)',DIV:'#f783ac',NC:'var(--text3)'};
+
+  tbody.innerHTML = g.feeders.map(f => {
+    const vc = STATUS_COLOR[f.V_status] || 'var(--text)';
+    const ic = STATUS_COLOR[f.I_status] || 'var(--text)';
+    const lpct = f.LoadPct !== null ? `<span style="color:${f.LoadPct>100?'var(--red)':f.LoadPct>80?'var(--orange)':'var(--green)'}">${f.LoadPct.toFixed(1)}%</span>` : '—';
+    const bcBadge = f.IsBusCoupler ? '<span style="background:rgba(248,131,172,0.15);color:#f783ac;border-radius:3px;padding:1px 5px;font-size:9px;margin-left:4px">BC</span>' : '';
+    return `<tr style="border-bottom:1px solid var(--border);transition:background 0.1s" onmouseover="this.style.background='var(--panel2)'" onmouseout="this.style.background=''">
+      <td style="padding:8px 10px;font-family:var(--font-mono);color:var(--accent);font-size:11px">${f.AssetCode}</td>
+      <td style="padding:8px 10px;font-size:12px;max-width:180px">${f.Feeder}${bcBadge}</td>
+      <td style="padding:8px 10px;text-align:center"><span class="pill pill-${f.FeederType==='Priority'?'P':'NP'}">${f.FeederType==='Priority'?'P':'NP'}</span></td>
+      <td style="padding:8px 10px;text-align:right;font-family:var(--font-mono);color:${vc};font-weight:600">${f.Vavg.toFixed(3)}</td>
+      <td style="padding:8px 10px;text-align:right;font-family:var(--font-mono);font-size:11px;color:var(--text2)">${f.Vr}/${f.Vy}/${f.Vb}</td>
+      <td style="padding:8px 10px;text-align:right;font-family:var(--font-mono)">${f.Imax.toFixed(1)}</td>
+      <td style="padding:8px 10px;text-align:right">${lpct}</td>
+      <td style="padding:8px 10px;text-align:right;font-family:var(--font-mono);font-size:11px">${f.ApparentPower.toFixed(3)}</td>
+      <td style="padding:8px 10px;text-align:center"><span style="color:${vc};font-weight:700;font-size:11px">${f.V_status}</span></td>
+      <td style="padding:8px 10px;text-align:center"><span style="color:${ic};font-weight:700;font-size:11px">${f.I_status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function closeGSSDetail() {
+  document.getElementById('gss-detail-panel').style.display = 'none';
+  selectedGSS = null;
+  document.querySelectorAll('.gss-card').forEach(c => c.classList.remove('selected'));
+}
+
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.navtab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab)?.classList.add('active');
+  const tabs=['dashboard','gss-view','alerts','load-events','feeder-master','settings'];
+  document.querySelectorAll('.navtab')[tabs.indexOf(tab)]?.classList.add('active');
+  if (tab==='feeder-master') { populateMasterCircleFilter(); renderMasterTable(); }
+  if (tab==='alerts')        { pollAlerts(); }
+  if (tab==='load-events')   { pollLoadEvents(); }
+  if (tab==='gss-view')      { loadGSSView(); }
+  if (tab==='settings')      { loadConfig(); loadMgmtReportConfig(); }
+}
+
+// ── Management Report ──────────────────────────────────────────
+async function loadMgmtReportConfig() {
+  const d = await api('GET', '/api/mgmt-report/config');
+  if (!d) return;
+  document.getElementById('mgmt-enabled').value    = d.enabled ? 'true' : 'false';
+  document.getElementById('mgmt-interval').value   = String(d.interval_min || 60);
+  document.getElementById('mgmt-from').value       = d.from_addr || '';
+  document.getElementById('mgmt-password').value   = d.password || '';
+  document.getElementById('mgmt-smtp-host').value  = d.smtp_host || '';
+  document.getElementById('mgmt-smtp-port').value  = d.smtp_port || 587;
+  document.getElementById('mgmt-tls').value        = d.tls || 'STARTTLS';
+  document.getElementById('mgmt-recipients').value    = (d.email_recipients||[]).join('\n');
+  document.getElementById('mgmt-wa-recipients').value = (d.wa_recipients||[]).join('\n');
+  document.getElementById('mgmt-whitelist').value  = (d.feeder_whitelist||[]).join('\n');
+  document.getElementById('mgmt-blacklist').value  = (d.feeder_blacklist||[]).join('\n');
+}
+
+async function saveMgmtReport() {
+  const toArr = id => document.getElementById(id).value.split(/[\n,]/).map(s=>s.trim()).filter(Boolean);
+  const payload = {
+    enabled:          document.getElementById('mgmt-enabled').value === 'true',
+    interval_min:     parseInt(document.getElementById('mgmt-interval').value),
+    from_addr:        document.getElementById('mgmt-from').value.trim(),
+    smtp_host:        document.getElementById('mgmt-smtp-host').value.trim(),
+    smtp_port:        parseInt(document.getElementById('mgmt-smtp-port').value),
+    tls:              document.getElementById('mgmt-tls').value,
+    email_recipients: toArr('mgmt-recipients'),
+    wa_recipients:    toArr('mgmt-wa-recipients'),
+    feeder_whitelist: toArr('mgmt-whitelist'),
+    feeder_blacklist: toArr('mgmt-blacklist'),
+  };
+  const pwd = document.getElementById('mgmt-password').value;
+  if (pwd && pwd !== '***') payload.password = pwd;
+  const r = await api('POST', '/api/mgmt-report/config', payload);
+  if (r?.ok) showToast('✅ Management report settings saved', 'success');
+  else showToast('❌ Save failed', 'error');
+}
+
+async function sendMgmtReportNow() {
+  showToast('📤 Sending management report...', 'warn');
+  const r = await api('POST', '/api/mgmt-report/send-now');
+  if (r?.ok) showToast('✅ ' + (r.message || 'Report sent'), 'success');
+  else showToast('❌ ' + (r?.message || 'Send failed — check SMTP settings'), 'error');
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-IN',{hour12:false});
+}
+
+function showToast(msg, type='success') {
+  const area = document.getElementById('toast-area');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icon = type==='success'?'✅':type==='error'?'❌':'⚠️';
+  t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  area.appendChild(t);
+  setTimeout(()=>t.remove(), 5000);
+}
+
+document.getElementById('feeder-modal').addEventListener('click', function(e){
+  if (e.target===this) closeModal();
+});
+document.getElementById('field-div-modal').addEventListener('click', function(e){
+  if (e.target===this) closeFieldDivModal();
+});
+document.getElementById('contact-modal').addEventListener('click', function(e){
+  if (e.target===this) closeContactModal();
+});
+document.getElementById('weather-station-modal').addEventListener('click', function(e){
+  if (e.target===this) closeWeatherStationModal();
+});
+</script>
+</body>
+</html>
